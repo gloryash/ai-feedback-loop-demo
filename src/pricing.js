@@ -19,6 +19,7 @@ export function quote({ plan = 'starter', coupon = '' } = {}) {
     base,
     discount,
     total: Math.max(base - discount, 0),
-    coupon: normalizedCoupon
+    coupon: normalizedCoupon,
+    bugHint: discount > 0 ? 'SAVE10 is applied.' : 'No coupon discount applied.'
   };
 }

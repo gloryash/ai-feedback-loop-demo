@@ -4,10 +4,10 @@ Minimal demo for a user-feedback-to-AI-PR workflow.
 
 ## What it shows
 
-- `/` is a simulated product page with an intentional bug.
+- `/` is a simulated product page used to reproduce or verify a pricing bug.
 - `/report.html` is a non-GitHub user feedback form with screenshot/log upload.
 - `POST /api/report` stores a normalized ticket, classifies it, and optionally creates a GitHub issue.
-- GitHub Actions runs Codex when an issue has the `autofix:candidate` label.
+- GitHub Actions runs Codex when the `autofix:candidate` label is added to an issue.
 - Codex is configured to call a custom Responses API endpoint through repository secrets.
 
 ## Local run
@@ -43,15 +43,19 @@ PUBLIC_BASE_URL=<deployed feedback site URL>
 
 ## How the trigger works
 
-1. A user submits the form.
+1. A user submits the form or a maintainer labels a GitHub issue.
 2. The server classifies the report.
 3. If it is a reproducible low-risk bug, the GitHub issue gets `bug` and `autofix:candidate`.
-4. `.github/workflows/ai-autofix.yml` runs on `issues.opened` or `issues.labeled`.
+4. `.github/workflows/ai-autofix.yml` runs when `autofix:candidate` is added.
 5. Codex edits a new branch.
 6. Tests run.
 7. The workflow opens a PR.
 
 Feature requests, design changes, and risky reports are labeled `needs:human` and do not trigger the autofix workflow.
+
+## Demo result
+
+Issue #1 in this repository was used as a live smoke test. Codex fixed the `SAVE10` Pro-plan bug, opened PR #2, the `node` and `gate` checks passed, and auto-merge merged the PR into `main`.
 
 ## Security notes
 

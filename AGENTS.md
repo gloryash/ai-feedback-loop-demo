@@ -12,9 +12,9 @@ This repository demonstrates a safe issue-to-AI-PR workflow.
 - Do not print, commit, or exfiltrate secrets.
 - Add or update tests for behavior changes whenever practical.
 
-## Demo bug
+## Demo bug scenario
 
-The intentional bug lives in `src/pricing.js`: coupon `SAVE10` should reduce the Pro plan from `100` to `90`, but the initial implementation returns `100`.
+The demo scenario is: coupon `SAVE10` should reduce the Pro plan from `100` to `90`. If the implementation returns `100`, that is the low-risk bug used to test the autofix workflow.
 
 ## Verification
 

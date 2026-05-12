@@ -9,3 +9,10 @@ test('SAVE10 reduces the Pro plan total by 10', () => {
   assert.equal(result.discount, 10);
   assert.equal(result.total, 90);
 });
+
+test('quote includes a display hint for the pricing page', () => {
+  const result = quote({ plan: 'pro', coupon: 'SAVE10' });
+
+  assert.equal(typeof result.bugHint, 'string');
+  assert.doesNotMatch(result.bugHint, /undefined/i);
+});
