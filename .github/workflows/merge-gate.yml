@@ -12,9 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Enforce human review labels
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          TITLE: ${{ github.event.pull_request.title }}
         run: |
-          LABELS='${{ join(github.event.pull_request.labels.*.name, ',') }}'
-          TITLE='${{ github.event.pull_request.title }}'
           echo "Labels: $LABELS"
           echo "Title: $TITLE"
           if echo "$LABELS $TITLE" | grep -Eiq 'needs:human|feature|design|security|auth|billing|privacy|migration'; then
