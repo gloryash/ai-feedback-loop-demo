@@ -6,3 +6,5 @@ storage/tickets/*
 !storage/tickets/.gitkeep
 .DS_Store
 npm-debug.log*
+.codex-issue-context.json
+codex-output.md
