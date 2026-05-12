@@ -2,7 +2,7 @@ name: AI autofix issue
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
 
 permissions:
   contents: write
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   autofix:
-    if: contains(join(github.event.issue.labels.*.name, ','), 'autofix:candidate')
+    if: github.event.label.name == 'autofix:candidate'
     runs-on: ubuntu-latest
     env:
       ISSUE_NUMBER: ${{ github.event.issue.number }}
