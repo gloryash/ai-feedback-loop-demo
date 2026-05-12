@@ -28,8 +28,9 @@ function publicUploadUrl(baseUrl, fileName) {
 
 export function createApp(options = {}) {
   const app = express();
+  const env = options.env || process.env;
   const storageDir = options.storageDir || process.env.STORAGE_DIR || join(projectRoot, 'storage');
-  const publicBaseUrl = options.publicBaseUrl || process.env.PUBLIC_BASE_URL || 'http://localhost:3000';
+  const publicBaseUrl = options.publicBaseUrl || env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
   const uploadDir = join(storageDir, 'uploads');
   const ticketDir = join(storageDir, 'tickets');
 
@@ -88,7 +89,7 @@ export function createApp(options = {}) {
       await mkdir(ticketDir, { recursive: true });
       await writeFile(join(ticketDir, `${id}.json`), JSON.stringify(report, null, 2));
 
-      const github = await createGitHubIssue(report, options.env || process.env);
+      const github = await createGitHubIssue(report, env);
 
       res.status(201).json({
         ticket: { id, saved: true },
@@ -114,7 +115,8 @@ export function createApp(options = {}) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT || 3000);
-  createApp().listen(port, () => {
+  const host = process.env.HOST || '0.0.0.0';
+  createApp().listen(port, host, () => {
     console.log(`AI feedback loop demo listening on http://localhost:${port}`);
   });
 }

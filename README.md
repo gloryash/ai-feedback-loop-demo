@@ -53,6 +53,27 @@ PUBLIC_BASE_URL=<deployed feedback site URL>
 
 Feature requests, design changes, and risky reports are labeled `needs:human` and do not trigger the autofix workflow.
 
+## Deploy to Render
+
+This repository includes `render.yaml` for a Render Blueprint web service.
+
+Render settings:
+
+```text
+Runtime: Node
+Build Command: npm ci
+Start Command: npm start
+Health Check Path: /api/health
+```
+
+Required Render environment variable:
+
+```text
+GITHUB_TOKEN=<GitHub App installation token or fine-grained PAT>
+```
+
+`GITHUB_OWNER` and `GITHUB_REPO` are already declared in `render.yaml`. Render provides `RENDER_EXTERNAL_URL` automatically, and the app uses it for upload links in generated GitHub issues.
+
 ## Demo result
 
 Issue #1 in this repository was used as a live smoke test. Codex fixed the `SAVE10` Pro-plan bug, opened PR #2, the `node` and `gate` checks passed, and auto-merge merged the PR into `main`.

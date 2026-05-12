@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: ai-feedback-loop-demo
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: GITHUB_OWNER
+        value: gloryash
+      - key: GITHUB_REPO
+        value: ai-feedback-loop-demo
+      - key: GITHUB_TOKEN
+        sync: false
