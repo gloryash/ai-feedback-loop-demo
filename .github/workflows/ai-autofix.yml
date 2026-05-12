@@ -1,0 +1,74 @@
+name: AI autofix issue
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ai-autofix-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  autofix:
+    if: contains(join(github.event.issue.labels.*.name, ','), 'autofix:candidate')
+    runs-on: ubuntu-latest
+    env:
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      BRANCH_NAME: ai/issue-${{ github.event.issue.number }}-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Create working branch
+        run: git checkout -b "$BRANCH_NAME"
+
+      - name: Capture issue context
+        run: |
+          gh issue view "$ISSUE_NUMBER" \
+            --json number,title,body,labels,url,author \
+            > .codex-issue-context.json
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Codex
+        id: run_codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.AI_PROXY_KEY }}
+          responses-api-endpoint: ${{ secrets.AI_RESPONSES_ENDPOINT }}
+          prompt-file: .github/codex/prompts/autofix.md
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+
+      - name: Run tests
+        run: npm test
+
+      - name: Create pull request
+        run: |
+          git config user.name "ai-autofix-bot"
+          git config user.email "ai-autofix-bot@users.noreply.github.com"
+          git add .
+          if git diff --cached --quiet; then
+            gh issue comment "$ISSUE_NUMBER" --body "Codex ran but did not produce a code change."
+            exit 0
+          fi
+          git commit -m "fix: resolve issue #$ISSUE_NUMBER"
+          git push origin "$BRANCH_NAME"
+          gh pr create \
+            --title "fix: resolve issue #$ISSUE_NUMBER" \
+            --body "Closes #$ISSUE_NUMBER" \
+            --label "ai:autofix" \
+            --label "bug"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

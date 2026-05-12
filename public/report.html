@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Report Issue - AI Feedback Loop Demo</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand"><span class="mark">AI</span> Feedback Loop Demo</div>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="/">Demo app</a>
+          <a href="/report.html">Report issue</a>
+        </nav>
+      </header>
+
+      <section class="report-grid">
+        <div class="report-title">
+          <h1>Submit a user report without touching GitHub.</h1>
+          <p class="lead">
+            The server turns this form into a normalized ticket. When GitHub credentials are
+            configured, it also creates an issue with routing labels for the AI workflow.
+          </p>
+          <p class="note">
+            Uploads are saved locally in this demo. A production version should store files in
+            S3, R2, GCS, or your own object store and redact secrets from logs before AI sees them.
+          </p>
+        </div>
+
+        <section class="panel">
+          <form class="report-form" id="report-form">
+            <div class="field">
+              <label for="type">Type</label>
+              <select id="type" name="type">
+                <option value="bug">Bug</option>
+                <option value="feature">Feature request</option>
+                <option value="design">Design change</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="title">Title</label>
+              <input id="title" name="title" required value="SAVE10 coupon does not work">
+            </div>
+
+            <div class="field">
+              <label for="steps">Reproduction steps</label>
+              <textarea id="steps" name="steps" required>Open the demo app, choose Pro, enter SAVE10, click Calculate.</textarea>
+            </div>
+
+            <div class="field">
+              <label for="expected">Expected result</label>
+              <textarea id="expected" name="expected" required>Total should be 90.</textarea>
+            </div>
+
+            <div class="field">
+              <label for="actual">Actual result</label>
+              <textarea id="actual" name="actual" required>Total stays 100.</textarea>
+            </div>
+
+            <div class="field">
+              <label for="environment">Environment</label>
+              <input id="environment" name="environment" value="Chrome on macOS">
+            </div>
+
+            <div class="field">
+              <label for="contact">Contact</label>
+              <input id="contact" name="contact" placeholder="optional email or user id">
+            </div>
+
+            <div class="field">
+              <label for="attachments">Screenshots or logs</label>
+              <input id="attachments" name="attachments" type="file" multiple>
+            </div>
+
+            <button class="primary" type="submit">Submit report</button>
+          </form>
+
+          <pre class="result" id="result">Waiting for a report...</pre>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const form = document.querySelector('#report-form');
+      const result = document.querySelector('#result');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        result.textContent = 'Submitting...';
+
+        const response = await fetch('/api/report', {
+          method: 'POST',
+          body: new FormData(form)
+        });
+        const payload = await response.json();
+        result.textContent = JSON.stringify(payload, null, 2);
+      });
+    </script>
+  </body>
+</html>

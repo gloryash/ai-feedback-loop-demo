@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Feedback Loop Demo</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand"><span class="mark">AI</span> Feedback Loop Demo</div>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="/">Demo app</a>
+          <a href="/report.html">Report issue</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div>
+          <h1>Pricing page with a deliberate bug.</h1>
+          <p class="lead">
+            This page simulates the real product your users operate. The Pro plan with coupon
+            SAVE10 should total 90, but the demo starts at 100 so an AI autofix issue has
+            something concrete to repair.
+          </p>
+
+          <div class="timeline">
+            <div class="step">
+              <span class="step-number">01</span>
+              <p>User sees the wrong quote here and submits a report from the feedback page.</p>
+            </div>
+            <div class="step">
+              <span class="step-number">02</span>
+              <p>The server stores the ticket, classifies it, and can create a GitHub issue.</p>
+            </div>
+            <div class="step">
+              <span class="step-number">03</span>
+              <p>GitHub Actions sees <strong>autofix:candidate</strong> and runs Codex through your proxy.</p>
+            </div>
+          </div>
+        </div>
+
+        <section class="panel price-board" aria-labelledby="quote-title">
+          <h2 id="quote-title">Quote calculator</h2>
+          <div class="field">
+            <label for="plan">Plan</label>
+            <select id="plan">
+              <option value="starter">Starter - $29</option>
+              <option value="pro" selected>Pro - $100</option>
+              <option value="scale">Scale - $240</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="coupon">Coupon</label>
+            <input id="coupon" value="SAVE10" autocomplete="off">
+          </div>
+          <button class="primary" id="quote-button" type="button">Calculate</button>
+
+          <div class="quote" aria-live="polite">
+            <div><span class="label">Base</span><span class="metric" id="base">$-</span></div>
+            <div><span class="label">Discount</span><span class="metric" id="discount">$-</span></div>
+            <div><span class="label">Total</span><span class="metric" id="total">$-</span></div>
+          </div>
+
+          <div class="bug-strip" id="bug-hint">
+            SAVE10 should reduce Pro from 100 to 90.
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      async function calculate() {
+        const plan = document.querySelector('#plan').value;
+        const coupon = document.querySelector('#coupon').value;
+        const response = await fetch(`/api/quote?plan=${encodeURIComponent(plan)}&coupon=${encodeURIComponent(coupon)}`);
+        const quote = await response.json();
+        document.querySelector('#base').textContent = `$${quote.base}`;
+        document.querySelector('#discount').textContent = `$${quote.discount}`;
+        document.querySelector('#total').textContent = `$${quote.total}`;
+        document.querySelector('#bug-hint').textContent = quote.bugHint;
+      }
+
+      document.querySelector('#quote-button').addEventListener('click', calculate);
+      calculate();
+    </script>
+  </body>
+</html>

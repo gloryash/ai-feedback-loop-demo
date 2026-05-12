@@ -1,0 +1,24 @@
+name: merge-gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce human review labels
+        run: |
+          LABELS='${{ join(github.event.pull_request.labels.*.name, ',') }}'
+          TITLE='${{ github.event.pull_request.title }}'
+          echo "Labels: $LABELS"
+          echo "Title: $TITLE"
+          if echo "$LABELS $TITLE" | grep -Eiq 'needs:human|feature|design|security|auth|billing|privacy|migration'; then
+            echo "This PR needs human review."
+            exit 1
+          fi
+          echo "Merge gate passed for low-risk PR."
