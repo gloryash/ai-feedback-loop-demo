@@ -17,3 +17,10 @@ test('merge gate does not block feature and design labels by default', async () 
   assert.match(workflow, /needs:human/);
   assert.match(workflow, /security/);
 });
+
+test('repository instructions allow AI to implement feature and design requests', async () => {
+  const instructions = await readFile(new URL('../AGENTS.md', import.meta.url), 'utf8');
+
+  assert.match(instructions, /bug fixes, feature requests, and design changes/i);
+  assert.doesNotMatch(instructions, /must not implement feature requests, design changes/i);
+});
