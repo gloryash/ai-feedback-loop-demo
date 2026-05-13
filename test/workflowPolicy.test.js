@@ -24,3 +24,10 @@ test('repository instructions allow AI to implement feature and design requests'
   assert.match(instructions, /bug fixes, feature requests, and design changes/i);
   assert.doesNotMatch(instructions, /must not implement feature requests, design changes/i);
 });
+
+test('auto-merge uses automation token so merged AI PRs can trigger deployment', async () => {
+  const workflow = await readFile(new URL('../.github/workflows/auto-merge-bugfix.yml', import.meta.url), 'utf8');
+
+  assert.match(workflow, /REPO_AUTOMATION_TOKEN/);
+  assert.doesNotMatch(workflow, /GH_TOKEN: \\$\\{\\{ secrets\\.GITHUB_TOKEN \\}\\}/);
+});
