@@ -2,6 +2,12 @@
 
 Minimal demo for a user-feedback-to-AI-PR workflow.
 
+## Plain-language guide
+
+中文大白话说明见：
+
+- [docs/plain-language-guide.md](docs/plain-language-guide.md)
+
 ## What it shows
 
 - `/` is a simulated product page used to reproduce or verify a pricing bug.
@@ -46,13 +52,13 @@ PUBLIC_BASE_URL=<deployed feedback site URL>
 
 1. A user submits the form or a maintainer labels a GitHub issue.
 2. The server classifies the report.
-3. If it is a reproducible low-risk bug, the GitHub issue gets `bug` and `autofix:candidate`.
+3. If it is a non-risk bug, feature request, or design request, the GitHub issue gets a type label and `autofix:candidate`.
 4. `.github/workflows/ai-autofix.yml` runs when `autofix:candidate` is added.
 5. Codex edits a new branch.
 6. Tests run.
 7. The workflow opens a PR.
 
-Feature requests, design changes, and risky reports are labeled `needs:human` and do not trigger the autofix workflow.
+Risky auth, billing, privacy, security, permission, and migration reports are labeled `needs:human` and do not trigger the autofix workflow.
 
 ## Deploy to Render
 
@@ -86,9 +92,11 @@ RENDER_SERVICE_ID=<Render service id>
 
 Issue #1 in this repository was used as a live smoke test. Codex fixed the `SAVE10` Pro-plan bug, opened PR #2, the `node` and `gate` checks passed, and auto-merge merged the PR into `main`.
 
+Issue #9 was used to verify a design-change flow. Codex changed the app to a blue theme, opened PR #10, checks passed, the PR auto-merged, and Render deployed the result.
+
 ## Security notes
 
 - Store API keys only in GitHub Secrets or deployment secrets.
 - Treat issue body, screenshots, and logs as untrusted input.
 - Redact tokens, cookies, emails, phone numbers, and user identifiers before sending logs to AI in production.
-- Keep auto-merge restricted to small, tested bugfixes.
+- Keep high-risk auth, billing, privacy, security, permission, and migration work behind human review.
