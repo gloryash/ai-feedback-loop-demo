@@ -10,6 +10,14 @@ test('SAVE10 reduces the Pro plan total by 10', () => {
   assert.equal(result.total, 90);
 });
 
+test('Scale plan quote uses the configured base price without a coupon', () => {
+  const result = quote({ plan: 'scale', coupon: '' });
+
+  assert.equal(result.base, 250);
+  assert.equal(result.discount, 0);
+  assert.equal(result.total, 250);
+});
+
 test('quote includes a display hint for the pricing page', () => {
   const result = quote({ plan: 'pro', coupon: 'SAVE10' });
 

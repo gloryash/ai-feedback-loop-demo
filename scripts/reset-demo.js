@@ -8,7 +8,7 @@ const pricingPath = join(root, 'src', 'pricing.js');
 const content = `const PLANS = {
   starter: 29,
   pro: 100,
-  scale: 240
+  scale: 250
 };
 
 export function quote({ plan = 'starter', coupon = '' } = {}) {
