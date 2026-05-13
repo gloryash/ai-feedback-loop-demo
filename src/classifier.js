@@ -67,17 +67,9 @@ export function classifyReport(report) {
     };
   }
 
-  if (hasUsefulDetails(report.details)) {
-    return {
-      route: 'ai-change',
-      labels: [type, 'autofix:candidate'],
-      reason: 'Request includes enough detail for an AI change attempt.'
-    };
-  }
-
   return {
-    route: 'human-review',
-    labels: ['needs:triage', 'needs:human'],
-    reason: 'The report is missing enough reproduction detail for safe automation.'
+    route: 'ai-change',
+    labels: [type, 'autofix:candidate'],
+    reason: 'Non-risk request will be attempted by AI. If details are sparse, AI may make the smallest reasonable change or ask for clarification in the issue.'
   };
 }

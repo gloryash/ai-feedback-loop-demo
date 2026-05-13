@@ -44,6 +44,17 @@ test('routes feature and design changes to AI change workflow', () => {
   }
 });
 
+test('routes short non-risk requests to AI change workflow', () => {
+  const result = classifyReport({
+    type: 'design',
+    title: '改成蓝色',
+    details: ''
+  });
+
+  assert.equal(result.route, 'ai-change');
+  assert.deepEqual(result.labels, ['design', 'autofix:candidate']);
+});
+
 test('routes risky security/auth/billing/privacy reports to human review', () => {
   const riskyTexts = [
     'auth session leaks',
