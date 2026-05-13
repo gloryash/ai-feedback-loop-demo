@@ -75,28 +75,13 @@
 
           <div class="result-panel" aria-live="polite">
             <h2 class="panel-title">提交后结果</h2>
-            <p class="field-help">这里会显示 ticket 编号、分类结果，以及是否成功创建 GitHub Issue。</p>
-            <pre class="result" id="result">等待提交问题...</pre>
+            <p class="field-help">这里会用中文告诉你反馈是否收到，以及接下来会怎么处理。</p>
+            <div class="result result-friendly" id="result" role="status">等待提交问题...</div>
           </div>
         </section>
       </section>
     </main>
 
-    <script>
-      const form = document.querySelector('#report-form');
-      const result = document.querySelector('#result');
-
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        result.textContent = '正在提交...';
-
-        const response = await fetch('/api/report', {
-          method: 'POST',
-          body: new FormData(form)
-        });
-        const payload = await response.json();
-        result.textContent = JSON.stringify(payload, null, 2);
-      });
-    </script>
+    <script type="module" src="/report.js"></script>
   </body>
 </html>
