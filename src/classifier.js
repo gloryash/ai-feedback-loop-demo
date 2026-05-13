@@ -1,4 +1,3 @@
-const HUMAN_REVIEW_TYPES = new Set(['feature', 'design']);
 const RISKY_KEYWORDS = [
   'auth',
   'authentication',
@@ -23,8 +22,13 @@ function hasUsefulDetails(value) {
   return typeof value === 'string' && value.trim().length >= 20;
 }
 
+function reportType(value) {
+  const type = String(value || '').toLowerCase();
+  return ['bug', 'feature', 'design'].includes(type) ? type : 'change';
+}
+
 export function classifyReport(report) {
-  const type = String(report.type || '').toLowerCase();
+  const type = reportType(report.type);
   const text = [
     report.title,
     report.details,
@@ -34,18 +38,10 @@ export function classifyReport(report) {
     report.environment
   ].join('\n').toLowerCase();
 
-  if (HUMAN_REVIEW_TYPES.has(type)) {
-    return {
-      route: 'human-review',
-      labels: [type, 'needs:human'],
-      reason: `${type} requests need product review before code changes.`
-    };
-  }
-
   if (RISKY_KEYWORDS.some((keyword) => text.includes(keyword))) {
     return {
       route: 'human-review',
-      labels: ['bug', 'needs:human', 'risk:review'],
+      labels: [type, 'needs:human', 'risk:review'],
       reason: 'The report touches security, auth, billing, privacy, permissions, or migrations.'
     };
   }
@@ -68,6 +64,14 @@ export function classifyReport(report) {
       route: 'bug-autofix',
       labels: ['bug', 'autofix:candidate'],
       reason: 'Bug report includes enough combined detail for an autofix attempt.'
+    };
+  }
+
+  if (hasUsefulDetails(report.details)) {
+    return {
+      route: 'ai-change',
+      labels: [type, 'autofix:candidate'],
+      reason: 'Request includes enough detail for an AI change attempt.'
     };
   }
 

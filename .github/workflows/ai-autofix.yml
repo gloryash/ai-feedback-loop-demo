@@ -68,10 +68,16 @@ jobs:
           fi
           git commit -m "fix: resolve issue #$ISSUE_NUMBER"
           git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$BRANCH_NAME"
+          TYPE_LABEL="$(gh issue view "$ISSUE_NUMBER" --json labels --jq '.labels[].name' | grep -E '^(bug|feature|design)$' | head -n 1 || true)"
+          if [ -n "$TYPE_LABEL" ]; then
+            TYPE_LABEL_ARGS=(--label "$TYPE_LABEL")
+          else
+            TYPE_LABEL_ARGS=()
+          fi
           gh pr create \
             --repo "$GITHUB_REPOSITORY" \
             --head "$BRANCH_NAME" \
             --title "fix: resolve issue #$ISSUE_NUMBER" \
             --body "Closes #$ISSUE_NUMBER" \
             --label "ai:autofix" \
-            --label "bug"
+            "${TYPE_LABEL_ARGS[@]}"

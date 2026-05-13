@@ -30,16 +30,16 @@ test('explains human-review submissions in plain Chinese', () => {
   assert.doesNotMatch(text, /human-review|needs:triage|classification|route/);
 });
 
-test('explains autofix submissions in plain Chinese', () => {
+test('explains AI change submissions in plain Chinese', () => {
   const copy = buildResultCopy({
     ticket: {
       id: 'T-20260513150000-AUTOF',
       saved: true
     },
     classification: {
-      route: 'bug-autofix',
-      labels: ['bug', 'autofix:candidate'],
-      reason: 'Bug report includes enough combined detail for an autofix attempt.'
+      route: 'ai-change',
+      labels: ['design', 'autofix:candidate'],
+      reason: 'Request includes enough detail for an AI change attempt.'
     },
     github: {
       created: true,
@@ -51,7 +51,7 @@ test('explains autofix submissions in plain Chinese', () => {
   const text = [copy.title, ...copy.lines, copy.issueText].join('\n');
 
   assert.match(text, /我们已经收到你的反馈/);
-  assert.match(text, /会尝试让 AI 自动修复/);
+  assert.match(text, /会尝试让 AI 自动处理/);
   assert.match(text, /修复完成后会出现在演示应用里/);
-  assert.doesNotMatch(text, /bug-autofix|autofix:candidate|classification|route/);
+  assert.doesNotMatch(text, /ai-change|autofix:candidate|classification|route/);
 });

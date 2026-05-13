@@ -18,8 +18,8 @@ jobs:
         run: |
           echo "Labels: $LABELS"
           echo "Title: $TITLE"
-          if echo "$LABELS $TITLE" | grep -Eiq 'needs:human|feature|design|security|auth|billing|privacy|migration'; then
+          if echo "$LABELS $TITLE" | grep -Eiq 'needs:human|risk:review|security|auth|billing|privacy|migration'; then
             echo "This PR needs human review."
             exit 1
           fi
-          echo "Merge gate passed for low-risk PR."
+          echo "Merge gate passed for AI change PR."

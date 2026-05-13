@@ -31,18 +31,16 @@ test('classifies bug reports with combined details as autofix candidates', () =>
   assert.deepEqual(result.labels, ['bug', 'autofix:candidate']);
 });
 
-test('routes feature and design changes to human review', () => {
+test('routes feature and design changes to AI change workflow', () => {
   for (const type of ['feature', 'design']) {
     const result = classifyReport({
       type,
       title: 'Please add a new dashboard',
-      steps: 'N/A',
-      expected: 'New UI',
-      actual: 'Old UI'
+      details: 'Please add a simple dashboard panel that shows the current plan and total price.'
     });
 
-    assert.equal(result.route, 'human-review');
-    assert.ok(result.labels.includes('needs:human'));
+    assert.equal(result.route, 'ai-change');
+    assert.deepEqual(result.labels, [type, 'autofix:candidate']);
   }
 });
 

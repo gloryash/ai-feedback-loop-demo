@@ -10,9 +10,9 @@ export function buildResultCopy(payload = {}) {
     issueUrl: ''
   };
 
-  if (route === 'bug-autofix') {
+  if (route === 'bug-autofix' || route === 'ai-change') {
     copy.lines.push(
-      '这看起来像一个可以自动处理的 Bug，系统会尝试让 AI 自动修复。',
+      '这条需求信息足够清楚，系统会尝试让 AI 自动处理并改代码。',
       '如果修复成功，修复完成后会出现在演示应用里，几分钟后刷新页面就能看到变化。'
     );
   } else if (route === 'human-review') {
