@@ -7,6 +7,7 @@ test('demo pages use a clear green theme', async () => {
 
   assert.match(css, /--paper:\s*#ecfdf3;/);
   assert.match(css, /--accent:\s*#16a34a;/);
+  assert.match(css, /--shadow:\s*0 18px 40px rgba\(21,\s*128,\s*61,\s*0\.16\);/);
   assert.match(css, /rgba\(22,\s*163,\s*74,\s*0\.08\)/);
   assert.match(css, /\.mark\s*\{[\s\S]*background:\s*var\(--accent-strong\);/);
   assert.match(css, /\.bug-strip\s*\{[\s\S]*background:\s*#bbf7d0;/);
