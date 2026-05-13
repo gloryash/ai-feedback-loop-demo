@@ -1,84 +1,97 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Report Issue - AI Feedback Loop Demo</title>
+    <title>提交问题 - AI Feedback Loop Demo</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
         <div class="brand"><span class="mark">AI</span> Feedback Loop Demo</div>
-        <nav class="nav" aria-label="Main navigation">
-          <a href="/">Demo app</a>
-          <a href="/report.html">Report issue</a>
+        <nav class="nav" aria-label="主导航">
+          <a href="/">演示应用</a>
+          <a href="/report.html">提交问题</a>
         </nav>
       </header>
 
       <section class="report-grid">
         <div class="report-title">
-          <h1>Submit a user report without touching GitHub.</h1>
+          <h1>不用打开 GitHub，也能提交问题。</h1>
           <p class="lead">
-            The server turns this form into a normalized ticket. When GitHub credentials are
-            configured, it also creates an issue with routing labels for the AI workflow.
+            这个页面会把用户反馈整理成标准 ticket。配置好 GitHub 权限后，
+            后端会同步创建 Issue，并根据问题类型给 AI 自动修复流程打上路由标签。
           </p>
           <p class="note">
-            Uploads are saved locally in this demo. A production version should store files in
-            S3, R2, GCS, or your own object store and redact secrets from logs before AI sees them.
+            当前 demo 会保存上传文件。正式上线时，截图和日志建议放到 S3、R2、GCS
+            或你自己的对象存储，并在交给 AI 前先过滤 token、cookie、手机号等敏感信息。
           </p>
         </div>
 
         <section class="panel">
+          <h2 class="panel-title">提交报告</h2>
           <form class="report-form" id="report-form">
             <div class="field">
-              <label for="type">Type</label>
+              <label for="type">问题类型</label>
               <select id="type" name="type">
-                <option value="bug">Bug</option>
-                <option value="feature">Feature request</option>
-                <option value="design">Design change</option>
+                <option value="bug">Bug / 缺陷</option>
+                <option value="feature">功能请求</option>
+                <option value="design">设计调整</option>
               </select>
+              <p class="field-help">决定后续路由：可复现 Bug 可以进入 AI 修复；功能和设计变更会进入人工审核。</p>
             </div>
 
             <div class="field">
-              <label for="title">Title</label>
-              <input id="title" name="title" required value="SAVE10 coupon does not work">
+              <label for="title">标题</label>
+              <input id="title" name="title" required placeholder="例如：Pro 套餐使用 SAVE10 后总价不正确">
+              <p class="field-help">用一句话说明问题，后续会作为 GitHub Issue 的标题。</p>
             </div>
 
             <div class="field">
-              <label for="steps">Reproduction steps</label>
-              <textarea id="steps" name="steps" required>Open the demo app, choose Pro, enter SAVE10, click Calculate.</textarea>
+              <label for="steps">复现步骤</label>
+              <textarea id="steps" name="steps" required placeholder="例如：打开演示应用，选择 Pro，输入 SAVE10，然后点击 Calculate。"></textarea>
+              <p class="field-help">告诉维护者或 AI 怎样一步步看到同一个问题。步骤越明确，自动修复越可靠。</p>
             </div>
 
             <div class="field">
-              <label for="expected">Expected result</label>
-              <textarea id="expected" name="expected" required>Total should be 90.</textarea>
+              <label for="expected">预期结果</label>
+              <textarea id="expected" name="expected" required placeholder="例如：总价应该显示为 90。"></textarea>
+              <p class="field-help">说明你认为正确的结果是什么，用来判断修复是否达标。</p>
             </div>
 
             <div class="field">
-              <label for="actual">Actual result</label>
-              <textarea id="actual" name="actual" required>Total stays 100.</textarea>
+              <label for="actual">实际结果</label>
+              <textarea id="actual" name="actual" required placeholder="例如：总价仍然显示为 100。"></textarea>
+              <p class="field-help">说明现在实际发生了什么，方便和预期结果对比。</p>
             </div>
 
             <div class="field">
-              <label for="environment">Environment</label>
-              <input id="environment" name="environment" value="Chrome on macOS">
+              <label for="environment">运行环境</label>
+              <input id="environment" name="environment" placeholder="例如：Chrome on macOS / iPhone Safari / 线上环境">
+              <p class="field-help">记录浏览器、系统、设备或版本信息，帮助定位是否是环境相关问题。</p>
             </div>
 
             <div class="field">
-              <label for="contact">Contact</label>
-              <input id="contact" name="contact" placeholder="optional email or user id">
+              <label for="contact">联系方式</label>
+              <input id="contact" name="contact" placeholder="可选：邮箱、用户 ID 或其他联系方式">
+              <p class="field-help">可选字段。需要追问细节或通知修复结果时会用到。</p>
             </div>
 
             <div class="field">
-              <label for="attachments">Screenshots or logs</label>
+              <label for="attachments">截图或日志</label>
               <input id="attachments" name="attachments" type="file" multiple>
+              <p class="field-help">上传截图、录屏、控制台日志或错误日志。请先删除密码、密钥、cookie 等敏感内容。</p>
             </div>
 
-            <button class="primary" type="submit">Submit report</button>
+            <button class="primary" type="submit">提交报告</button>
           </form>
 
-          <pre class="result" id="result">Waiting for a report...</pre>
+          <div class="result-panel" aria-live="polite">
+            <h2 class="panel-title">提交后结果</h2>
+            <p class="field-help">这里会显示 ticket 编号、分类结果，以及是否成功创建 GitHub Issue。</p>
+            <pre class="result" id="result">等待提交问题...</pre>
+          </div>
         </section>
       </section>
     </main>
@@ -89,7 +102,7 @@
 
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        result.textContent = 'Submitting...';
+        result.textContent = '正在提交...';
 
         const response = await fetch('/api/report', {
           method: 'POST',

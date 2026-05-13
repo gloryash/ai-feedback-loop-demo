@@ -139,6 +139,11 @@ button.primary {
   padding: 24px;
 }
 
+.panel-title {
+  margin: 0 0 16px;
+  font: 800 20px/1.25 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+}
+
 .price-board {
   display: grid;
   gap: 18px;
@@ -235,6 +240,16 @@ textarea {
 .report-form {
   display: grid;
   gap: 16px;
+}
+
+.field-help {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font: 14px/1.55 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+}
+
+.result-panel {
+  margin-top: 24px;
 }
 
 .result {
