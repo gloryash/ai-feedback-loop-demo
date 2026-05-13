@@ -75,6 +75,7 @@ export function createApp(options = {}) {
         id,
         type: cleanField(req.body.type || 'bug'),
         title: cleanField(req.body.title),
+        details: cleanField(req.body.details),
         steps: cleanField(req.body.steps),
         expected: cleanField(req.body.expected),
         actual: cleanField(req.body.actual),

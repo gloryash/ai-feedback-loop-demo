@@ -15,6 +15,22 @@ test('classifies reproducible bug reports as autofix candidates', () => {
   assert.deepEqual(result.labels, ['bug', 'autofix:candidate']);
 });
 
+test('classifies bug reports with combined details as autofix candidates', () => {
+  const result = classifyReport({
+    type: 'bug',
+    title: 'SAVE10 coupon does not change total',
+    details: [
+      '我做了什么：打开演示应用，选择 Pro，输入 SAVE10。',
+      '我以为会发生什么：总价应该显示 90。',
+      '实际发生了什么：总价仍然显示 100。',
+      '我的设备/浏览器：Chrome on macOS。'
+    ].join('\n')
+  });
+
+  assert.equal(result.route, 'bug-autofix');
+  assert.deepEqual(result.labels, ['bug', 'autofix:candidate']);
+});
+
 test('routes feature and design changes to human review', () => {
   for (const type of ['feature', 'design']) {
     const result = classifyReport({

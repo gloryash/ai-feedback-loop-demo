@@ -7,6 +7,12 @@ test('builds a GitHub issue body with report fields and attachment links', () =>
     id: 'T-100',
     title: 'SAVE10 coupon does not work',
     type: 'bug',
+    details: [
+      '我做了什么：选择 Pro 并输入 SAVE10。',
+      '我以为会发生什么：总价变成 90。',
+      '实际发生了什么：总价仍然是 100。',
+      '我的设备/浏览器：Chrome 124 on macOS。'
+    ].join('\n'),
     steps: 'Choose Pro and enter SAVE10.',
     expected: 'Total becomes 90.',
     actual: 'Total stays 100.',
@@ -24,6 +30,8 @@ test('builds a GitHub issue body with report fields and attachment links', () =>
 
   assert.match(body, /Ticket ID: T-100/);
   assert.match(body, /SAVE10 coupon does not work/);
+  assert.match(body, /## Problem details/);
+  assert.match(body, /我做了什么/);
   assert.match(body, /autofix:candidate/);
   assert.match(body, /https:\/\/example.com\/uploads\/screen.png/);
   assert.doesNotMatch(body, /undefined/);

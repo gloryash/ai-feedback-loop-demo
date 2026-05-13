@@ -49,33 +49,19 @@
             </div>
 
             <div class="field">
-              <label for="steps">复现步骤</label>
-              <textarea id="steps" name="steps" required placeholder="例如：打开演示应用，选择 Pro，输入 SAVE10，然后点击 Calculate。"></textarea>
-              <p class="field-help">告诉维护者或 AI 怎样一步步看到同一个问题。步骤越明确，自动修复越可靠。</p>
-            </div>
-
-            <div class="field">
-              <label for="expected">预期结果</label>
-              <textarea id="expected" name="expected" required placeholder="例如：总价应该显示为 90。"></textarea>
-              <p class="field-help">说明你认为正确的结果是什么，用来判断修复是否达标。</p>
-            </div>
-
-            <div class="field">
-              <label for="actual">实际结果</label>
-              <textarea id="actual" name="actual" required placeholder="例如：总价仍然显示为 100。"></textarea>
-              <p class="field-help">说明现在实际发生了什么，方便和预期结果对比。</p>
-            </div>
-
-            <div class="field">
-              <label for="environment">运行环境</label>
-              <input id="environment" name="environment" placeholder="例如：Chrome on macOS / iPhone Safari / 线上环境">
-              <p class="field-help">记录浏览器、系统、设备或版本信息，帮助定位是否是环境相关问题。</p>
+              <label for="details">问题详情</label>
+              <textarea id="details" name="details" required placeholder="可以直接写一段话，也可以按下面格式写：
+我做了什么：
+我以为会发生什么：
+实际发生了什么：
+我的设备/浏览器："></textarea>
+              <p class="field-help">把复现步骤、预期结果、实际结果和运行环境合在这里写。后端会把整段内容放进 GitHub Issue，供 AI 或维护者判断。</p>
             </div>
 
             <div class="field">
               <label for="contact">联系方式</label>
               <input id="contact" name="contact" placeholder="可选：邮箱、用户 ID 或其他联系方式">
-              <p class="field-help">可选字段。需要追问细节或通知修复结果时会用到。</p>
+              <p class="field-help">可选字段。当前 demo 不会自动发邮件，只用于需要追问时联系你。</p>
             </div>
 
             <div class="field">

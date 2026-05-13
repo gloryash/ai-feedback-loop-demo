@@ -36,6 +36,44 @@ test('POST /api/report stores ticket and returns classification without GitHub t
   }
 });
 
+test('POST /api/report accepts simplified details-only bug reports', async () => {
+  const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
+  const app = createApp({ storageDir });
+  const server = app.listen(0);
+
+  try {
+    const { port } = server.address();
+    const form = new FormData();
+    form.set('type', 'bug');
+    form.set('title', 'SAVE10 coupon does not work');
+    form.set('details', [
+      '我做了什么：打开演示应用，选择 Pro，输入 SAVE10。',
+      '我以为会发生什么：总价应该显示 90。',
+      '实际发生了什么：总价仍然显示 100。',
+      '我的设备/浏览器：Chrome on macOS。'
+    ].join('\n'));
+
+    const response = await fetch(`http://127.0.0.1:${port}/api/report`, {
+      method: 'POST',
+      body: form
+    });
+    const payload = await response.json();
+
+    const ticketFiles = await readdir(join(storageDir, 'tickets'));
+    const ticket = JSON.parse(
+      await readFile(join(storageDir, 'tickets', ticketFiles[0]), 'utf8')
+    );
+
+    assert.equal(response.status, 201);
+    assert.equal(payload.classification.route, 'bug-autofix');
+    assert.match(ticket.details, /我做了什么/);
+    assert.match(ticket.issueBody, /## Problem details/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(storageDir, { recursive: true, force: true });
+  }
+});
+
 test('POST /api/report uses Render public URL for uploaded attachment links', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   const app = createApp({

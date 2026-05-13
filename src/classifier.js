@@ -19,10 +19,15 @@ function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function hasUsefulDetails(value) {
+  return typeof value === 'string' && value.trim().length >= 20;
+}
+
 export function classifyReport(report) {
   const type = String(report.type || '').toLowerCase();
   const text = [
     report.title,
+    report.details,
     report.steps,
     report.expected,
     report.actual,
@@ -55,6 +60,14 @@ export function classifyReport(report) {
       route: 'bug-autofix',
       labels: ['bug', 'autofix:candidate'],
       reason: 'Reproducible bug with expected and actual results.'
+    };
+  }
+
+  if (type === 'bug' && hasUsefulDetails(report.details)) {
+    return {
+      route: 'bug-autofix',
+      labels: ['bug', 'autofix:candidate'],
+      reason: 'Bug report includes enough combined detail for an autofix attempt.'
     };
   }
 

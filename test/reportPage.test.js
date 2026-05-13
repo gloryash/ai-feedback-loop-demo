@@ -2,17 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-test('report page uses Chinese copy while preserving backend form values', async () => {
+test('report page uses a simplified Chinese form while preserving routing values', async () => {
   const html = await readFile(new URL('../public/report.html', import.meta.url), 'utf8');
 
   for (const text of [
     '提交问题',
     '问题类型',
     '标题',
-    '复现步骤',
-    '预期结果',
-    '实际结果',
-    '运行环境',
+    '问题详情',
     '联系方式',
     '截图或日志',
     '提交报告',
@@ -21,17 +18,12 @@ test('report page uses Chinese copy while preserving backend form values', async
     assert.match(html, new RegExp(text));
   }
 
-  for (const fieldName of [
-    'type',
-    'title',
-    'steps',
-    'expected',
-    'actual',
-    'environment',
-    'contact',
-    'attachments'
-  ]) {
+  for (const fieldName of ['type', 'title', 'details', 'contact', 'attachments']) {
     assert.match(html, new RegExp(`name="${fieldName}"`));
+  }
+
+  for (const removedField of ['steps', 'expected', 'actual', 'environment']) {
+    assert.doesNotMatch(html, new RegExp(`name="${removedField}"`));
   }
 
   assert.match(html, /<option value="bug">/);

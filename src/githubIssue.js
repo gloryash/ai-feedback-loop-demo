@@ -12,9 +12,25 @@ function attachmentLines(attachments = []) {
     .join('\n');
 }
 
+function structuredDetails(report) {
+  const parts = [
+    ['Reproduction steps', report.steps],
+    ['Expected result', report.expected],
+    ['Actual result', report.actual],
+    ['Environment', report.environment]
+  ].filter(([, value]) => value && String(value).trim());
+
+  if (!parts.length) {
+    return '';
+  }
+
+  return parts.map(([label, value]) => `${label}: ${String(value).trim()}`).join('\n');
+}
+
 export function buildIssueBody(report) {
   const labels = report.classification?.labels?.join(', ') || '-';
   const reason = report.classification?.reason || '-';
+  const details = valueOrDash(report.details || structuredDetails(report));
 
   return [
     `Ticket ID: ${valueOrDash(report.id)}`,
@@ -24,6 +40,9 @@ export function buildIssueBody(report) {
     '',
     '## Type',
     valueOrDash(report.type),
+    '',
+    '## Problem details',
+    details,
     '',
     '## Reproduction steps',
     valueOrDash(report.steps),
