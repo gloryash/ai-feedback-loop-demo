@@ -75,6 +75,13 @@ GITHUB_TOKEN=<GitHub App installation token or fine-grained PAT>
 
 `GITHUB_OWNER` and `GITHUB_REPO` are already declared in `render.yaml`. Render provides `RENDER_EXTERNAL_URL` automatically, and the app uses it for upload links in generated GitHub issues.
 
+This repository also includes `.github/workflows/deploy-render.yml`. It calls the Render Deploy API on every push to `main`, which is useful when the service is created from the CLI and Render's native GitHub autodeploy webhook is not active. Configure these repository secrets:
+
+```text
+RENDER_API_KEY=<Render API key>
+RENDER_SERVICE_ID=<Render service id>
+```
+
 ## Demo result
 
 Issue #1 in this repository was used as a live smoke test. Codex fixed the `SAVE10` Pro-plan bug, opened PR #2, the `node` and `gate` checks passed, and auto-merge merged the PR into `main`.
