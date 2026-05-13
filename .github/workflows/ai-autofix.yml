@@ -55,6 +55,9 @@ jobs:
         run: npm test
 
       - name: Create pull request
+        env:
+          GH_TOKEN: ${{ secrets.REPO_AUTOMATION_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           git config user.name "ai-autofix-bot"
           git config user.email "ai-autofix-bot@users.noreply.github.com"
@@ -64,11 +67,9 @@ jobs:
             exit 0
           fi
           git commit -m "fix: resolve issue #$ISSUE_NUMBER"
-          git push origin "$BRANCH_NAME"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$BRANCH_NAME"
           gh pr create \
             --title "fix: resolve issue #$ISSUE_NUMBER" \
             --body "Closes #$ISSUE_NUMBER" \
             --label "ai:autofix" \
             --label "bug"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

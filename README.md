@@ -30,6 +30,7 @@ Set these repository secrets:
 ```text
 AI_PROXY_KEY=<your proxy key>
 AI_RESPONSES_ENDPOINT=https://your-proxy.example.com/v1/responses
+REPO_AUTOMATION_TOKEN=<GitHub token used to create PRs so pull_request checks run>
 ```
 
 For the feedback form to create GitHub issues directly, run the app with:
