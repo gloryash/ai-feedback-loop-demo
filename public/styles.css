@@ -1,15 +1,15 @@
 :root {
   color-scheme: light;
-  --paper: #f7f4ec;
-  --ink: #18231f;
-  --muted: #5c675e;
-  --line: #d8d0bf;
-  --panel: #fffdf7;
-  --accent: #0f766e;
-  --accent-strong: #0b4f49;
-  --signal: #d97706;
+  --paper: #eaf4ff;
+  --ink: #0b1f3a;
+  --muted: #46627f;
+  --line: #a9c7e8;
+  --panel: #f8fbff;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --signal: #38bdf8;
   --danger: #b42318;
-  --shadow: 0 18px 40px rgba(24, 35, 31, 0.12);
+  --shadow: 0 18px 40px rgba(11, 31, 58, 0.14);
 }
 
 * {
@@ -19,8 +19,8 @@
 body {
   margin: 0;
   background:
-    linear-gradient(90deg, rgba(24, 35, 31, 0.04) 1px, transparent 1px),
-    linear-gradient(rgba(24, 35, 31, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(37, 99, 235, 0.06) 1px, transparent 1px),
     var(--paper);
   background-size: 36px 36px;
   color: var(--ink);
@@ -63,7 +63,7 @@ a {
   height: 34px;
   display: inline-grid;
   place-items: center;
-  background: var(--ink);
+  background: var(--accent-strong);
   color: var(--paper);
   font-size: 16px;
 }
@@ -187,7 +187,7 @@ textarea {
   min-height: 92px;
   padding: 14px;
   border-right: 1px solid var(--ink);
-  background: #fffaf0;
+  background: #e8f2ff;
 }
 
 .quote div:last-child {
@@ -201,10 +201,10 @@ textarea {
 }
 
 .bug-strip {
-  border-left: 5px solid var(--danger);
-  background: #fff1f0;
+  border-left: 5px solid var(--accent);
+  background: #dbeafe;
   padding: 14px 16px;
-  color: #6b1e16;
+  color: #12356f;
   font: 700 14px/1.45 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
 }
 
@@ -255,7 +255,7 @@ textarea {
 .result {
   margin-top: 18px;
   border: 1px solid var(--line);
-  background: #f8fff8;
+  background: #e8f2ff;
   color: var(--ink);
   padding: 14px;
   font: 15px/1.55 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
@@ -286,7 +286,7 @@ textarea {
 }
 
 .result-pending {
-  background: #fffaf0;
+  background: #dbeafe;
 }
 
 .result-error {
