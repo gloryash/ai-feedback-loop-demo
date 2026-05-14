@@ -1,15 +1,15 @@
 :root {
   color-scheme: light;
-  --paper: #ecfdf3;
-  --ink: #12301f;
-  --muted: #4a6b56;
-  --line: #a8d8b5;
-  --panel: #f8fff9;
-  --accent: #16a34a;
-  --accent-strong: #15803d;
-  --signal: #34d399;
+  --paper: #f3f4f6;
+  --ink: #1f2937;
+  --muted: #5f6773;
+  --line: #c7ccd4;
+  --panel: #ffffff;
+  --accent: #6b7280;
+  --accent-strong: #374151;
+  --signal: #9ca3af;
   --danger: #b42318;
-  --shadow: 0 18px 40px rgba(21, 128, 61, 0.16);
+  --shadow: 0 18px 40px rgba(31, 41, 55, 0.14);
 }
 
 * {
@@ -19,8 +19,8 @@
 body {
   margin: 0;
   background:
-    linear-gradient(90deg, rgba(22, 163, 74, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(22, 163, 74, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 41, 55, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(31, 41, 55, 0.06) 1px, transparent 1px),
     var(--paper);
   background-size: 36px 36px;
   color: var(--ink);
@@ -187,7 +187,7 @@ textarea {
   min-height: 92px;
   padding: 14px;
   border-right: 1px solid var(--ink);
-  background: #dcfce7;
+  background: #e5e7eb;
 }
 
 .quote div:last-child {
@@ -202,9 +202,9 @@ textarea {
 
 .bug-strip {
   border-left: 5px solid var(--accent);
-  background: #bbf7d0;
+  background: #d1d5db;
   padding: 14px 16px;
-  color: #14532d;
+  color: #1f2937;
   font: 700 14px/1.45 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
 }
 
@@ -255,7 +255,7 @@ textarea {
 .result {
   margin-top: 18px;
   border: 1px solid var(--line);
-  background: #dcfce7;
+  background: #e5e7eb;
   color: var(--ink);
   padding: 14px;
   font: 15px/1.55 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
@@ -286,7 +286,7 @@ textarea {
 }
 
 .result-pending {
-  background: #bbf7d0;
+  background: #d1d5db;
 }
 
 .result-error {
