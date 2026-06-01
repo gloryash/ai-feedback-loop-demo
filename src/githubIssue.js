@@ -74,7 +74,7 @@ export function buildIssueBody(report) {
   ].join('\n');
 }
 
-export async function createGitHubIssue(report, env = process.env) {
+export async function createGitHubIssue(report, env = process.env, options = {}) {
   const owner = env.GITHUB_OWNER;
   const repo = env.GITHUB_REPO;
   const token = env.GITHUB_TOKEN;
@@ -97,7 +97,7 @@ export async function createGitHubIssue(report, env = process.env) {
     body: JSON.stringify({
       title: `[${report.type}] ${report.title}`,
       body: buildIssueBody(report),
-      labels: report.classification.labels
+      labels: options.labels || report.classification.labels
     })
   });
 
