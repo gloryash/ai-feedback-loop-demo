@@ -56,6 +56,20 @@
   -> 用户刷新页面看到新版本
 ```
 
+如果配置为本地 PR 模式，后台链路会变成：
+
+```text
+用户提交网页表单
+  -> Node 服务创建 GitHub Issue
+  -> Issue 带 local:candidate 标签
+  -> 管理员确认后添加 local:approved 标签
+  -> 你的本地 Mac worker 主动轮询 GitHub
+  -> worker 在本地 git worktree 里运行 Codex
+  -> worker 跑测试、提交分支、创建 PR
+```
+
+本地 PR 模式不需要把你的 Mac 暴露成公网服务。Mac 只需要运行 `npm run worker:local`，主动去 GitHub 拉取已审批任务。Mac 关机或 worker 没运行时，任务会停在已审批队列里，等 worker 下次启动再处理。
+
 ## 各个平台分别负责什么
 
 ### Render
@@ -90,6 +104,8 @@ GitHub 负责保存代码、Issue、PR 和自动化流程。
 Codex 负责根据 Issue 读代码、改代码、补测试。
 
 这里的 Codex 是通过 GitHub Actions 里的 `openai/codex-action@v1` 调用的。当前项目用的是中转站地址和密钥，放在 GitHub Secrets 里，不写进代码。
+
+在本地 PR 模式里，Codex 不是通过 GitHub Actions 调用，而是由本地 worker 在本地仓库 worktree 中执行 `codex exec`。这样它可以使用本机 Codex 配置、skills 和 MCP，但也意味着本地 worker 必须运行在可信机器上。
 
 ### GitHub Secrets
 
@@ -161,6 +177,17 @@ AI 不会直接改 `main`。
 8. 合并后触发 Render 部署。
 
 这样至少有测试和门禁，不是 AI 直接往线上乱写。
+
+本地 PR 模式也不会直接改 `main`。它会：
+
+1. 为每个 Issue 创建独立本地 worktree。
+2. 创建 `ai/local/issue-<number>` 分支。
+3. 运行 `codex exec`。
+4. 跑配置的测试命令，默认是 `npm test`。
+5. 测试通过且有代码变化后提交并推送分支。
+6. 使用 `gh pr create` 创建 PR。
+
+PR 创建后仍然需要走仓库自己的 review、测试、合并和部署规则。
 
 ## 用户怎么知道有没有改好
 
@@ -269,6 +296,12 @@ AI 不会直接改 `main`。
 ```
 
 AI 必须忽略这类内容。项目里已经在 prompt 和 `AGENTS.md` 里写了安全约束。
+
+### 1.1 本地 worker 不要暴露到公网
+
+本地 PR 模式的 worker 应该只作为本机后台进程运行。不要把它做成公开 HTTP 服务，也不要让用户提交内容直接变成 shell command。
+
+worker 只会运行配置文件里的固定命令，例如 `codex exec`、`npm test`、`git`、`gh`。如果你的本地机器保存了个人浏览器登录态、私钥、公司内网权限，建议使用单独的 macOS 用户或专用测试机运行 worker。
 
 ### 2. 不要把密钥写进代码
 

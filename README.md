@@ -28,6 +28,11 @@
 10. 合并到 `main` 后自动触发 Render 部署。
 11. 用户刷新线上页面，看到新版本。
 
+现在自动修改支持两种模式：
+
+- `cloud`：默认模式，继续使用 GitHub Actions 上的 Codex 修改代码。
+- `local-pr`：本地模式，网页后端创建 GitHub Issue 后等待人工添加 `local:approved`，本地 Mac 上的 worker 轮询已审批 Issue，在本地 worktree 里运行 `codex exec`，测试通过后 push 分支并创建 PR。
+
 已经验证过的例子：
 
 - Codex 修复过 `SAVE10` 优惠码计算问题。
@@ -51,6 +56,21 @@
   -> 用户刷新页面看到结果
 ```
 
+本地 PR 模式的机制是：
+
+```text
+用户提交表单
+  -> 后端创建 GitHub Issue
+  -> 打上 local:candidate 标签
+  -> 管理员添加 local:approved 标签
+  -> 本地 worker 轮询并领取任务
+  -> 本地 worker 创建 git worktree
+  -> codex exec 在本地 worktree 中改代码
+  -> npm test
+  -> git commit / git push
+  -> gh pr create
+```
+
 ## 本地运行
 
 需要 Node.js 22 或更新版本。
@@ -67,6 +87,32 @@ npm start
 - <http://localhost:3000/report.html>
 
 本地运行只能验证网页和接口。如果要完整验证“提交后创建 GitHub Issue、Codex 改代码、PR 合并、Render 部署”，必须配置 GitHub 和 Render。
+
+如果要验证本地 PR 模式，还需要在本机安装并登录：
+
+```bash
+git --version
+gh auth status
+codex --version
+```
+
+复制配置文件：
+
+```bash
+cp automation.config.example.json automation.config.json
+```
+
+把 `automation.config.json` 里的 `mode` 改成 `local-pr`，把 `localPr.enabled` 改成 `true`，确认 `localPr.repoPath` 指向本地仓库。然后运行一次 worker：
+
+```bash
+npm run worker:local:once
+```
+
+持续轮询模式：
+
+```bash
+npm run worker:local
+```
 
 ## 完整复刻步骤
 
@@ -118,6 +164,11 @@ gh label create "risk:review" --color "D93F0B" --description "Risky change needs
 gh label create "feature" --color "1D76DB" --description "Feature request" || true
 gh label create "design" --color "5319E7" --description "Design change" || true
 gh label create "ai:autofix" --color "0E8A16" --description "PR created by AI automation" || true
+gh label create "local:candidate" --color "5319E7" --description "Candidate for local worker processing" || true
+gh label create "local:approved" --color "0E8A16" --description "Approved for local worker processing" || true
+gh label create "local:running" --color "FBCA04" --description "Local worker is processing this issue" || true
+gh label create "local:pr-created" --color "0E8A16" --description "Local worker created a PR" || true
+gh label create "local:failed" --color "B60205" --description "Local worker failed" || true
 ```
 
 `bug` 通常是 GitHub 默认 label。如果你的仓库没有，也创建一下：
