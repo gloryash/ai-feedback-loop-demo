@@ -1,0 +1,24 @@
+{
+  "mode": "cloud",
+  "cloud": {
+    "enabled": true,
+    "autofixLabel": "autofix:candidate"
+  },
+  "localPr": {
+    "enabled": false,
+    "repoPath": ".",
+    "baseBranch": "main",
+    "worktreeRoot": ".aipr/worktrees",
+    "branchPrefix": "ai/local",
+    "pollIntervalSeconds": 20,
+    "maxConcurrency": 1,
+    "codexCommand": "codex",
+    "codexArgs": ["exec", "--sandbox", "workspace-write", "--ephemeral", "-"],
+    "testCommand": "npm test",
+    "approvalLabel": "local:approved",
+    "candidateLabel": "local:candidate",
+    "runningLabel": "local:running",
+    "doneLabel": "local:pr-created",
+    "failedLabel": "local:failed"
+  }
+}

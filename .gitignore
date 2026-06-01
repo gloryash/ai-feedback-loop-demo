@@ -6,5 +6,8 @@ storage/tickets/*
 !storage/tickets/.gitkeep
 .DS_Store
 npm-debug.log*
+automation.config.json
+.aipr/
 .codex-issue-context.json
 codex-output.md
+storage/jobs/*.log
