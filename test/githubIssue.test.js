@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildIssueBody, createGitHubIssue } from '../src/githubIssue.js';
+import {
+  addIssueLabels,
+  buildIssueBody,
+  commentOnIssue,
+  createGitHubIssue,
+  listApprovedLocalIssues,
+  removeIssueLabel
+} from '../src/githubIssue.js';
 
 test('builds a GitHub issue body with report fields and attachment links', () => {
   const body = buildIssueBody({
@@ -68,6 +75,126 @@ test('createGitHubIssue uses caller-provided labels when supplied', async () => 
 
     assert.equal(result.created, true);
     assert.deepEqual(requestBody.labels, ['bug', 'local:candidate']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('listApprovedLocalIssues searches approved local candidate issues', async () => {
+  const originalFetch = globalThis.fetch;
+  let requestedUrl;
+  globalThis.fetch = async (url) => {
+    requestedUrl = url;
+    return {
+      ok: true,
+      json: async () => ({
+        items: [
+          {
+            number: 12,
+            title: 'SAVE10 coupon does not work',
+            body: 'body',
+            labels: [{ name: 'local:candidate' }, { name: 'local:approved' }],
+            html_url: 'https://github.com/acme/demo/issues/12',
+            user: { login: 'user' }
+          }
+        ]
+      })
+    };
+  };
+
+  try {
+    const issues = await listApprovedLocalIssues({
+      GITHUB_OWNER: 'acme',
+      GITHUB_REPO: 'demo',
+      GITHUB_TOKEN: 'token'
+    }, {
+      localPr: {
+        candidateLabel: 'local:candidate',
+        approvalLabel: 'local:approved',
+        runningLabel: 'local:running',
+        doneLabel: 'local:pr-created',
+        failedLabel: 'local:failed'
+      }
+    });
+
+    assert.match(requestedUrl, /^https:\/\/api\.github\.com\/search\/issues\?/);
+    assert.match(decodeURIComponent(requestedUrl), /repo:acme\/demo/);
+    assert.match(decodeURIComponent(requestedUrl), /label:"local:candidate"/);
+    assert.match(decodeURIComponent(requestedUrl), /label:"local:approved"/);
+    assert.match(decodeURIComponent(requestedUrl), /-label:"local:running"/);
+    assert.equal(issues[0].number, 12);
+    assert.equal(issues[0].url, 'https://github.com/acme/demo/issues/12');
+    assert.equal(issues[0].author.login, 'user');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('addIssueLabels posts labels to an issue', async () => {
+  const originalFetch = globalThis.fetch;
+  let request;
+  globalThis.fetch = async (url, options) => {
+    request = { url, options };
+    return { ok: true, json: async () => [] };
+  };
+
+  try {
+    await addIssueLabels(12, ['local:running'], {
+      GITHUB_OWNER: 'acme',
+      GITHUB_REPO: 'demo',
+      GITHUB_TOKEN: 'token'
+    });
+
+    assert.equal(request.url, 'https://api.github.com/repos/acme/demo/issues/12/labels');
+    assert.equal(request.options.method, 'POST');
+    assert.deepEqual(JSON.parse(request.options.body), { labels: ['local:running'] });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('removeIssueLabel deletes an issue label', async () => {
+  const originalFetch = globalThis.fetch;
+  let request;
+  globalThis.fetch = async (url, options) => {
+    request = { url, options };
+    return { ok: true, json: async () => ({}) };
+  };
+
+  try {
+    await removeIssueLabel(12, 'local:running', {
+      GITHUB_OWNER: 'acme',
+      GITHUB_REPO: 'demo',
+      GITHUB_TOKEN: 'token'
+    });
+
+    assert.equal(request.url, 'https://api.github.com/repos/acme/demo/issues/12/labels/local%3Arunning');
+    assert.equal(request.options.method, 'DELETE');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('commentOnIssue posts a markdown comment', async () => {
+  const originalFetch = globalThis.fetch;
+  let request;
+  globalThis.fetch = async (url, options) => {
+    request = { url, options };
+    return { ok: true, json: async () => ({ id: 1 }) };
+  };
+
+  try {
+    await commentOnIssue(12, 'Created PR: https://github.com/acme/demo/pull/34', {
+      GITHUB_OWNER: 'acme',
+      GITHUB_REPO: 'demo',
+      GITHUB_TOKEN: 'token'
+    });
+
+    assert.equal(request.url, 'https://api.github.com/repos/acme/demo/issues/12/comments');
+    assert.equal(request.options.method, 'POST');
+    assert.deepEqual(JSON.parse(request.options.body), {
+      body: 'Created PR: https://github.com/acme/demo/pull/34'
+    });
   } finally {
     globalThis.fetch = originalFetch;
   }

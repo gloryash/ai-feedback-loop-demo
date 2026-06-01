@@ -117,3 +117,107 @@ export async function createGitHubIssue(report, env = process.env, options = {})
     url: payload.html_url
   };
 }
+
+function requireGitHubEnv(env) {
+  const owner = env.GITHUB_OWNER;
+  const repo = env.GITHUB_REPO;
+  const token = env.GITHUB_TOKEN;
+
+  if (!owner || !repo || !token) {
+    throw new Error('GITHUB_OWNER, GITHUB_REPO, and GITHUB_TOKEN are required.');
+  }
+
+  return { owner, repo, token };
+}
+
+function headers(token) {
+  return {
+    accept: 'application/vnd.github+json',
+    authorization: `Bearer ${token}`,
+    'content-type': 'application/json',
+    'x-github-api-version': '2022-11-28'
+  };
+}
+
+async function readPayload(response) {
+  try {
+    return await response.json();
+  } catch {
+    return {};
+  }
+}
+
+async function githubJson(url, env, options = {}) {
+  const { token } = requireGitHubEnv(env);
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...headers(token),
+      ...(options.headers || {})
+    }
+  });
+  const payload = await readPayload(response);
+
+  if (!response.ok) {
+    throw new Error(payload.message || `GitHub API request failed with status ${response.status}`);
+  }
+
+  return payload;
+}
+
+function normalizeIssue(issue) {
+  return {
+    number: issue.number,
+    title: issue.title,
+    body: issue.body || '',
+    labels: issue.labels || [],
+    url: issue.html_url || issue.url || '',
+    author: issue.user || issue.author || null
+  };
+}
+
+export async function listApprovedLocalIssues(env = process.env, config) {
+  const { owner, repo } = requireGitHubEnv(env);
+  const local = config.localPr;
+  const query = [
+    `repo:${owner}/${repo}`,
+    'is:issue',
+    'is:open',
+    `label:"${local.candidateLabel}"`,
+    `label:"${local.approvalLabel}"`,
+    `-label:"${local.runningLabel}"`,
+    `-label:"${local.doneLabel}"`,
+    `-label:"${local.failedLabel}"`
+  ].join(' ');
+
+  const url = new URL('https://api.github.com/search/issues');
+  url.searchParams.set('q', query);
+  url.searchParams.set('sort', 'created');
+  url.searchParams.set('order', 'asc');
+
+  const payload = await githubJson(url.toString(), env);
+  return (payload.items || []).map(normalizeIssue);
+}
+
+export async function addIssueLabels(issueNumber, labels, env = process.env) {
+  const { owner, repo } = requireGitHubEnv(env);
+  return githubJson(`https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}/labels`, env, {
+    method: 'POST',
+    body: JSON.stringify({ labels })
+  });
+}
+
+export async function removeIssueLabel(issueNumber, label, env = process.env) {
+  const { owner, repo } = requireGitHubEnv(env);
+  return githubJson(`https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}/labels/${encodeURIComponent(label)}`, env, {
+    method: 'DELETE'
+  });
+}
+
+export async function commentOnIssue(issueNumber, body, env = process.env) {
+  const { owner, repo } = requireGitHubEnv(env);
+  return githubJson(`https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}/comments`, env, {
+    method: 'POST',
+    body: JSON.stringify({ body })
+  });
+}
