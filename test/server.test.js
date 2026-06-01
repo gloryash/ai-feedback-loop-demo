@@ -112,3 +112,87 @@ test('POST /api/report uses Render public URL for uploaded attachment links', as
     await rm(storageDir, { recursive: true, force: true });
   }
 });
+
+test('POST /api/report passes cloud autofix labels to GitHub issue creation', async () => {
+  const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
+  let issueLabels;
+  const app = createApp({
+    storageDir,
+    automationConfig: {
+      mode: 'cloud',
+      cloud: { autofixLabel: 'autofix:candidate' },
+      localPr: { candidateLabel: 'local:candidate' }
+    },
+    createGitHubIssue: async (report, env, options) => {
+      issueLabels = options.labels;
+      return { created: true, number: 22, url: 'https://github.com/acme/demo/issues/22' };
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const { port } = server.address();
+    const form = new FormData();
+    form.set('type', 'bug');
+    form.set('title', 'SAVE10 coupon does not work');
+    form.set('steps', 'Choose Pro and enter SAVE10.');
+    form.set('expected', 'Total becomes 90.');
+    form.set('actual', 'Total stays 100.');
+
+    const response = await fetch(`http://127.0.0.1:${port}/api/report`, {
+      method: 'POST',
+      body: form
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(issueLabels, ['bug', 'autofix:candidate']);
+    assert.equal(payload.automation.mode, 'cloud');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(storageDir, { recursive: true, force: true });
+  }
+});
+
+test('POST /api/report passes local candidate labels in local-pr mode', async () => {
+  const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
+  let issueLabels;
+  const app = createApp({
+    storageDir,
+    automationConfig: {
+      mode: 'local-pr',
+      cloud: { autofixLabel: 'autofix:candidate' },
+      localPr: { candidateLabel: 'local:candidate' }
+    },
+    createGitHubIssue: async (report, env, options) => {
+      issueLabels = options.labels;
+      return { created: true, number: 23, url: 'https://github.com/acme/demo/issues/23' };
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const { port } = server.address();
+    const form = new FormData();
+    form.set('type', 'bug');
+    form.set('title', 'SAVE10 coupon does not work');
+    form.set('steps', 'Choose Pro and enter SAVE10.');
+    form.set('expected', 'Total becomes 90.');
+    form.set('actual', 'Total stays 100.');
+
+    const response = await fetch(`http://127.0.0.1:${port}/api/report`, {
+      method: 'POST',
+      body: form
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(issueLabels, ['bug', 'local:candidate']);
+    assert.equal(issueLabels.includes('autofix:candidate'), false);
+    assert.equal(payload.automation.mode, 'local-pr');
+    assert.equal(payload.automation.requiresApproval, true);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(storageDir, { recursive: true, force: true });
+  }
+});

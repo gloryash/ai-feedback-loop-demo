@@ -1,6 +1,7 @@
 export function buildResultCopy(payload = {}) {
   const ticketId = payload.ticket?.id || '系统已记录';
   const route = payload.classification?.route;
+  const automationMode = payload.automation?.mode;
   const github = payload.github || {};
 
   const copy = {
@@ -10,7 +11,12 @@ export function buildResultCopy(payload = {}) {
     issueUrl: ''
   };
 
-  if (route === 'bug-autofix' || route === 'ai-change') {
+  if (automationMode === 'local-pr') {
+    copy.lines.push(
+      '这条反馈已进入本地处理队列。',
+      '管理员审批后，本地 worker 会在本地仓库创建分支并开 PR。'
+    );
+  } else if (route === 'bug-autofix' || route === 'ai-change') {
     copy.lines.push(
       '这条需求信息足够清楚，系统会尝试让 AI 自动处理并改代码。',
       '如果修复成功，修复完成后会出现在演示应用里，几分钟后刷新页面就能看到变化。'

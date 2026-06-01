@@ -4,6 +4,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadAutomationConfigSync } from './automationConfig.js';
+import { routeAutomation } from './automationRouter.js';
 import { classifyReport } from './classifier.js';
 import { buildIssueBody, createGitHubIssue } from './githubIssue.js';
 import { quote } from './pricing.js';
@@ -31,6 +33,8 @@ export function createApp(options = {}) {
   const env = options.env || process.env;
   const storageDir = options.storageDir || process.env.STORAGE_DIR || join(projectRoot, 'storage');
   const publicBaseUrl = options.publicBaseUrl || env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+  const automationConfig = options.automationConfig || loadAutomationConfigSync({ env, cwd: projectRoot });
+  const createIssue = options.createGitHubIssue || createGitHubIssue;
   const uploadDir = join(storageDir, 'uploads');
   const ticketDir = join(storageDir, 'tickets');
 
@@ -85,16 +89,25 @@ export function createApp(options = {}) {
       };
 
       report.classification = classifyReport(report);
-      report.issueBody = buildIssueBody(report);
+      report.automation = routeAutomation(report, automationConfig);
+      const issueReport = {
+        ...report,
+        classification: {
+          ...report.classification,
+          labels: report.automation.labels
+        }
+      };
+      report.issueBody = buildIssueBody(issueReport);
 
       await mkdir(ticketDir, { recursive: true });
       await writeFile(join(ticketDir, `${id}.json`), JSON.stringify(report, null, 2));
 
-      const github = await createGitHubIssue(report, env);
+      const github = await createIssue(report, env, { labels: report.automation.labels });
 
       res.status(201).json({
         ticket: { id, saved: true },
         classification: report.classification,
+        automation: report.automation,
         github
       });
     } catch (error) {

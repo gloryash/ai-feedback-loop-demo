@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const SUPPORTED_MODES = new Set(['cloud', 'local-pr']);
@@ -54,6 +55,17 @@ async function readJsonIfPresent(path) {
   }
 }
 
+function readJsonIfPresentSync(path) {
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return {};
+    }
+    throw error;
+  }
+}
+
 function applyEnv(config, env) {
   const next = { ...config, localPr: { ...config.localPr } };
 
@@ -77,6 +89,16 @@ function validateConfig(config) {
 export async function loadAutomationConfig({ env = process.env, cwd = process.cwd() } = {}) {
   const path = env.AUTOMATION_CONFIG || join(cwd, 'automation.config.json');
   const fileConfig = await readJsonIfPresent(path);
+  const config = applyEnv(mergeConfig(fileConfig), env);
+
+  validateConfig(config);
+
+  return config;
+}
+
+export function loadAutomationConfigSync({ env = process.env, cwd = process.cwd() } = {}) {
+  const path = env.AUTOMATION_CONFIG || join(cwd, 'automation.config.json');
+  const fileConfig = readJsonIfPresentSync(path);
   const config = applyEnv(mergeConfig(fileConfig), env);
 
   validateConfig(config);

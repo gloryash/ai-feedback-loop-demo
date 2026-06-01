@@ -55,3 +55,32 @@ test('explains AI change submissions in plain Chinese', () => {
   assert.match(text, /修复完成后会出现在演示应用里/);
   assert.doesNotMatch(text, /ai-change|autofix:candidate|classification|route/);
 });
+
+test('explains local-pr submissions in plain Chinese', () => {
+  const copy = buildResultCopy({
+    ticket: {
+      id: 'T-20260602120000-LOCAL',
+      saved: true
+    },
+    classification: {
+      route: 'bug-autofix',
+      labels: ['bug', 'local:candidate']
+    },
+    automation: {
+      mode: 'local-pr',
+      requiresApproval: true
+    },
+    github: {
+      created: true,
+      number: 9,
+      url: 'https://github.com/gloryash/ai-feedback-loop-demo/issues/9'
+    }
+  });
+
+  const text = [copy.title, ...copy.lines, copy.issueText].join('\n');
+
+  assert.match(text, /进入本地处理队列/);
+  assert.match(text, /管理员审批后/);
+  assert.match(text, /本地 worker/);
+  assert.doesNotMatch(text, /local-pr|local:candidate|classification|route/);
+});
