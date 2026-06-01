@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test test/*.test.js",
-    "demo:reset": "node scripts/reset-demo.js"
+    "demo:reset": "node scripts/reset-demo.js",
+    "worker:local": "node scripts/local-worker.js",
+    "worker:local:once": "node scripts/local-worker.js --once"
   },
   "dependencies": {
     "express": "^5.2.0",
