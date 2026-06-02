@@ -1,5 +1,6 @@
 export function buildResultCopy(payload = {}) {
   const ticketId = payload.ticket?.id || '系统已记录';
+  const review = payload.review;
   const route = payload.classification?.route;
   const automationMode = payload.automation?.mode;
   const github = payload.github || {};
@@ -11,7 +12,17 @@ export function buildResultCopy(payload = {}) {
     issueUrl: ''
   };
 
-  if (automationMode === 'local-pr') {
+  if (review?.status === 'pending-review') {
+    copy.lines.push(
+      '这条反馈正在等待管理员审核，暂时不会让 AI 直接改代码。',
+      '审核通过后，管理员会决定是否交给 AI 或人工继续处理。'
+    );
+  } else if (review?.autoApproved) {
+    copy.lines.push(
+      '这条反馈看起来是清楚的小 Bug，已经自动通过审核并发送给 AI。',
+      '如果修复成功，修复完成后会出现在演示应用里，几分钟后刷新页面就能看到变化。'
+    );
+  } else if (automationMode === 'local-pr') {
     copy.lines.push(
       '这条反馈已进入本地处理队列。',
       '管理员审批后，本地 worker 会在本地仓库创建分支并开 PR。'

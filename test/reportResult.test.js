@@ -2,6 +2,49 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildResultCopy } from '../public/report.js';
 
+test('explains pending review submissions in plain Chinese', () => {
+  const copy = buildResultCopy({
+    ticket: {
+      id: 'T-20260602121000-REVIEW',
+      saved: true
+    },
+    review: {
+      status: 'pending-review'
+    },
+    github: {
+      created: false
+    }
+  });
+
+  const text = [copy.title, ...copy.lines, copy.issueText].join('\n');
+
+  assert.match(text, /管理员审核/);
+  assert.match(text, /暂时不会让 AI 直接改代码/);
+});
+
+test('explains auto-approved bug submissions in plain Chinese', () => {
+  const copy = buildResultCopy({
+    ticket: {
+      id: 'T-20260602121500-AUTO',
+      saved: true
+    },
+    review: {
+      status: 'sent-to-ai',
+      autoApproved: true
+    },
+    github: {
+      created: true,
+      number: 10,
+      url: 'https://github.com/gloryash/ai-feedback-loop-demo/issues/10'
+    }
+  });
+
+  const text = [copy.title, ...copy.lines, copy.issueText].join('\n');
+
+  assert.match(text, /小 Bug/);
+  assert.match(text, /自动通过/);
+});
+
 test('explains human-review submissions in plain Chinese', () => {
   const copy = buildResultCopy({
     ticket: {

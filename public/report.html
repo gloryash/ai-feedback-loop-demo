@@ -21,8 +21,8 @@
         <div class="report-title">
           <h1>不用打开 GitHub，也能提交问题。</h1>
           <p class="lead">
-            这个页面会把用户反馈整理成标准 ticket。配置好 GitHub 权限后，
-            后端会同步创建 Issue，并根据问题类型给 AI 自动修复流程打上路由标签。
+            这个页面会把用户反馈整理成标准 ticket。清楚的小 Bug 可能会自动通过审核并发送给 AI，
+            较大的需求或不确定的反馈会先等待管理员审核，不会直接让 AI 改代码。
           </p>
           <p class="note">
             当前 demo 会保存上传文件。正式上线时，截图和日志建议放到 S3、R2、GCS
@@ -40,13 +40,13 @@
                 <option value="feature">功能请求</option>
                 <option value="design">设计调整</option>
               </select>
-              <p class="field-help">决定后续路由：Bug、功能请求、设计调整都会尝试进入 AI 改代码流程；安全、支付、隐私等高风险内容会先人工确认。</p>
+              <p class="field-help">决定后续路由：清楚的小 Bug 可能自动通过并发送给 AI；较大的功能请求、设计调整或高风险内容会先等待管理员审核。</p>
             </div>
 
             <div class="field">
               <label for="title">标题</label>
               <input id="title" name="title" required placeholder="例如：Pro 套餐使用 SAVE10 后总价不正确">
-              <p class="field-help">用一句话说明问题，后续会作为 GitHub Issue 的标题。</p>
+              <p class="field-help">用一句话说明问题，后续会作为 ticket 标题；需要公开跟踪时也会用于 GitHub Issue 标题。</p>
             </div>
 
             <div class="field">
@@ -56,7 +56,7 @@
 我以为会发生什么：
 实际发生了什么：
 我的设备/浏览器："></textarea>
-              <p class="field-help">把复现步骤、预期结果、实际结果和运行环境合在这里写。后端会把整段内容放进 GitHub Issue，供 AI 或维护者判断。</p>
+              <p class="field-help">把复现步骤、预期结果、实际结果和运行环境合在这里写。后端会保存整段内容，供 AI 或管理员判断下一步。</p>
             </div>
 
             <div class="field">
