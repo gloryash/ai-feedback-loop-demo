@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>管理员审核 - AI Feedback Loop Demo</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell admin-shell">
+      <header class="topbar">
+        <div class="brand"><span class="mark">AI</span> Feedback Loop Demo</div>
+        <nav class="nav" aria-label="主导航">
+          <a href="/">演示应用</a>
+          <a href="/report.html">提交问题</a>
+          <a href="/admin.html">管理员审核</a>
+        </nav>
+      </header>
+
+      <section class="admin-header">
+        <div>
+          <h1>iShoe 需求审核</h1>
+          <p class="lead">查看用户提交的需求，补充管理员评论，再决定是否交给 AI 修改代码。</p>
+        </div>
+        <p class="warning-note">暂未启用登录。这个页面和后台接口只适合本地演示或私有环境。</p>
+      </section>
+
+      <section class="admin-layout">
+        <aside class="panel admin-list-panel" aria-label="需求列表">
+          <div class="filter-row" id="status-filters">
+            <button type="button" data-status="">全部</button>
+            <button type="button" data-status="pending-review">待审核</button>
+            <button type="button" data-status="sent-to-ai">已发送 AI</button>
+            <button type="button" data-status="rejected">已驳回</button>
+            <button type="button" data-status="failed">失败</button>
+          </div>
+          <div id="ticket-list" class="ticket-list" aria-live="polite">正在加载...</div>
+        </aside>
+
+        <section class="panel admin-detail-panel" aria-label="需求详情">
+          <div id="ticket-detail" class="ticket-detail">请选择一条需求。</div>
+
+          <div class="field">
+            <label for="admin-comment">管理员评论</label>
+            <textarea id="admin-comment" placeholder="补充 AI 需要理解的上下文、边界、优先级或不要做的事。"></textarea>
+          </div>
+
+          <div class="action-row">
+            <button id="save-comment-button" type="button">保存评论</button>
+            <button id="approve-button" class="primary" type="button">通过给 AI</button>
+            <button id="reject-button" class="danger-button" type="button">驳回</button>
+          </div>
+
+          <div id="admin-result" class="result result-friendly" role="status">等待操作...</div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="/admin.js"></script>
+  </body>
+</html>

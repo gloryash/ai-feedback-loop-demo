@@ -300,11 +300,232 @@ textarea {
   line-height: 1.55;
 }
 
+.admin-shell {
+  width: min(1280px, calc(100vw - 32px));
+}
+
+.admin-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 24px;
+  align-items: end;
+  padding-top: 32px;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.warning-note {
+  margin: 0;
+  border: 1px solid var(--danger);
+  border-left-width: 5px;
+  background: #fff1f0;
+  color: #7a271a;
+  padding: 14px 16px;
+  font: 800 14px/1.55 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr);
+  gap: 24px;
+  align-items: start;
+  padding-top: 28px;
+}
+
+.admin-list-panel,
+.admin-detail-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.filter-row,
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-row button {
+  min-height: 36px;
+  padding: 8px 10px;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.filter-row button.is-active {
+  background: var(--ink);
+  color: white;
+}
+
+.ticket-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ticket-card {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  min-height: 0;
+  padding: 12px;
+  text-align: left;
+  text-transform: none;
+  box-shadow: none;
+}
+
+.ticket-card:hover,
+.ticket-card.is-selected {
+  transform: none;
+  box-shadow: inset 5px 0 0 var(--accent-strong);
+  background: #e5e7eb;
+}
+
+.ticket-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ticket-id,
+.eyebrow {
+  color: var(--muted);
+  font: 800 12px/1.2 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+  text-transform: uppercase;
+}
+
+.ticket-card-title {
+  color: var(--ink);
+  font: 800 15px/1.25 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.ticket-card-meta {
+  color: var(--muted);
+  font: 13px/1.35 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 24px;
+  border: 1px solid var(--ink);
+  background: #d1d5db;
+  color: var(--ink);
+  padding: 4px 8px;
+  font: 800 12px/1 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+  white-space: nowrap;
+}
+
+.status-sent-to-ai {
+  background: #dbeafe;
+}
+
+.status-rejected,
+.status-failed {
+  background: #fff1f0;
+  color: #7a271a;
+}
+
+.ticket-detail {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+}
+
+.detail-heading h2 {
+  margin: 4px 0 0;
+  font: 800 24px/1.2 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.eyebrow {
+  margin: 0;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.detail-grid div {
+  min-width: 0;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 9px;
+}
+
+.detail-grid dt,
+.detail-block h3 {
+  margin: 0 0 5px;
+  color: var(--muted);
+  font: 800 12px/1.2 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+  text-transform: uppercase;
+}
+
+.detail-grid dd,
+.detail-block p {
+  margin: 0;
+  font: 14px/1.5 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.detail-block {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-block pre {
+  margin: 0;
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  background: #f9fafb;
+  padding: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 14px/1.55 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--muted);
+  font: 14px/1.5 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
+}
+
+.danger-button {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (max-width: 760px) {
   .topbar,
   .hero,
   .split,
-  .report-grid {
+  .report-grid,
+  .admin-header,
+  .admin-layout,
+  .detail-grid {
     grid-template-columns: 1fr;
   }
 
@@ -323,5 +544,14 @@ textarea {
 
   .quote div:last-child {
     border-bottom: 0;
+  }
+
+  .detail-heading {
+    display: grid;
+  }
+
+  .action-row button,
+  .filter-row button {
+    flex: 1 1 140px;
   }
 }
