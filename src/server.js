@@ -1,14 +1,16 @@
 import express from 'express';
 import multer from 'multer';
-import { mkdir, writeFile } from 'node:fs/promises';
 import { mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadAutomationConfigSync } from './automationConfig.js';
 import { routeAutomation } from './automationRouter.js';
 import { classifyReport } from './classifier.js';
-import { buildIssueBody, createGitHubIssue } from './githubIssue.js';
+import { addIssueLabels as defaultAddIssueLabels, createGitHubIssue } from './githubIssue.js';
 import { quote } from './pricing.js';
+import { reviewDecisionForReport } from './reviewPolicy.js';
+import { approveTicketForAi } from './reviewWorkflow.js';
+import { createTicketStore, newReviewState } from './ticketStore.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
@@ -28,6 +30,22 @@ function publicUploadUrl(baseUrl, fileName) {
   return `${base}/uploads/${fileName}`;
 }
 
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function isTerminalReview(ticket) {
+  return ['sent-to-ai', 'rejected'].includes(ticket?.review?.status);
+}
+
+function notFound(res) {
+  res.status(404).json({ error: 'Ticket not found' });
+}
+
+function conflict(res) {
+  res.status(409).json({ error: 'Ticket review is already complete' });
+}
+
 export function createApp(options = {}) {
   const app = express();
   const env = options.env || process.env;
@@ -35,8 +53,11 @@ export function createApp(options = {}) {
   const publicBaseUrl = options.publicBaseUrl || env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
   const automationConfig = options.automationConfig || loadAutomationConfigSync({ env, cwd: projectRoot });
   const createIssue = options.createGitHubIssue || createGitHubIssue;
+  const addIssueLabels = options.addIssueLabels || defaultAddIssueLabels;
   const uploadDir = join(storageDir, 'uploads');
   const ticketDir = join(storageDir, 'tickets');
+  const ticketStore = options.ticketStore || createTicketStore(ticketDir);
+  const activeReviewOperations = new Set();
 
   mkdirSync(uploadDir, { recursive: true });
   mkdirSync(ticketDir, { recursive: true });
@@ -90,28 +111,208 @@ export function createApp(options = {}) {
 
       report.classification = classifyReport(report);
       report.automation = routeAutomation(report, automationConfig);
-      const issueReport = {
-        ...report,
-        classification: {
-          ...report.classification,
-          labels: report.automation.labels
-        }
-      };
-      report.issueBody = buildIssueBody(issueReport);
+      const decision = reviewDecisionForReport(report);
+      const timestamp = nowIso();
+      report.createdAt = timestamp;
+      report.updatedAt = timestamp;
+      report.review = newReviewState({
+        status: decision.status,
+        autoApproved: decision.autoApproved,
+        requiresAdminReview: decision.requiresAdminReview,
+        reason: decision.reason
+      });
 
-      await mkdir(ticketDir, { recursive: true });
-      await writeFile(join(ticketDir, `${id}.json`), JSON.stringify(report, null, 2));
+      await ticketStore.saveTicket(report);
 
-      const github = await createIssue(report, env, { labels: report.automation.labels });
+      let ticket = report;
+      let github = { created: false, reason: 'Ticket is pending administrator review.' };
+
+      if (decision.autoApproved) {
+        const approval = await approveTicketForAi({
+          ticket,
+          config: automationConfig,
+          env,
+          createGitHubIssue: createIssue,
+          addIssueLabels
+        });
+        const reviewedAt = nowIso();
+        ticket = {
+          ...ticket,
+          updatedAt: reviewedAt,
+          automation: approval.automation,
+          github: approval.github,
+          issueBody: approval.issueBody,
+          review: {
+            ...ticket.review,
+            status: 'sent-to-ai',
+            autoApproved: true,
+            requiresAdminReview: false,
+            reviewedAt,
+            reviewer: 'system'
+          }
+        };
+        await ticketStore.saveTicket(ticket);
+        github = approval.github;
+      }
 
       res.status(201).json({
         ticket: { id, saved: true },
-        classification: report.classification,
-        automation: report.automation,
+        classification: ticket.classification,
+        automation: ticket.automation,
+        review: ticket.review,
         github
       });
     } catch (error) {
       next(error);
+    }
+  });
+
+  app.get('/api/admin/tickets', async (req, res, next) => {
+    try {
+      const tickets = await ticketStore.listTickets({ status: cleanField(req.query.status) });
+      res.json({ tickets });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get('/api/admin/tickets/:id', async (req, res, next) => {
+    try {
+      const ticket = await ticketStore.getTicket(req.params.id);
+      if (!ticket) {
+        notFound(res);
+        return;
+      }
+
+      res.json({ ticket });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post('/api/admin/tickets/:id/comment', async (req, res, next) => {
+    try {
+      const updatedAt = nowIso();
+      const ticket = await ticketStore.updateTicket(req.params.id, (current) => ({
+        ...current,
+        updatedAt,
+        review: {
+          ...newReviewState(),
+          ...(current.review || {}),
+          adminComment: cleanField(req.body?.comment),
+        }
+      }));
+
+      if (!ticket) {
+        notFound(res);
+        return;
+      }
+
+      res.json({ ticket });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post('/api/admin/tickets/:id/approve', async (req, res, next) => {
+    let claimed = false;
+    try {
+      if (activeReviewOperations.has(req.params.id)) {
+        conflict(res);
+        return;
+      }
+      activeReviewOperations.add(req.params.id);
+      claimed = true;
+
+      const ticket = await ticketStore.getTicket(req.params.id);
+      if (!ticket) {
+        notFound(res);
+        return;
+      }
+      if (isTerminalReview(ticket)) {
+        conflict(res);
+        return;
+      }
+
+      const approval = await approveTicketForAi({
+        ticket,
+        config: automationConfig,
+        env,
+        createGitHubIssue: createIssue,
+        addIssueLabels
+      });
+      const reviewedAt = nowIso();
+      const updated = {
+        ...ticket,
+        updatedAt: reviewedAt,
+        automation: approval.automation,
+        github: approval.github,
+        issueBody: approval.issueBody,
+        review: {
+          ...newReviewState(),
+          ...(ticket.review || {}),
+          status: 'sent-to-ai',
+          autoApproved: false,
+          requiresAdminReview: false,
+          reviewedAt,
+          reviewer: 'admin'
+        }
+      };
+      await ticketStore.saveTicket(updated);
+
+      res.json({ ticket: updated, github: approval.github });
+    } catch (error) {
+      next(error);
+    } finally {
+      if (claimed) {
+        activeReviewOperations.delete(req.params.id);
+      }
+    }
+  });
+
+  app.post('/api/admin/tickets/:id/reject', async (req, res, next) => {
+    let claimed = false;
+    try {
+      if (activeReviewOperations.has(req.params.id)) {
+        conflict(res);
+        return;
+      }
+      activeReviewOperations.add(req.params.id);
+      claimed = true;
+
+      const ticket = await ticketStore.getTicket(req.params.id);
+      if (!ticket) {
+        notFound(res);
+        return;
+      }
+      if (isTerminalReview(ticket)) {
+        conflict(res);
+        return;
+      }
+
+      const reviewedAt = nowIso();
+      const updated = {
+        ...ticket,
+        updatedAt: reviewedAt,
+        review: {
+          ...newReviewState(),
+          ...(ticket.review || {}),
+          status: 'rejected',
+          requiresAdminReview: false,
+          reviewedAt,
+          reviewer: 'admin',
+          failureReason: cleanField(req.body?.reason)
+        }
+      };
+      await ticketStore.saveTicket(updated);
+
+      res.json({ ticket: updated });
+    } catch (error) {
+      next(error);
+    } finally {
+      if (claimed) {
+        activeReviewOperations.delete(req.params.id);
+      }
     }
   });
 
