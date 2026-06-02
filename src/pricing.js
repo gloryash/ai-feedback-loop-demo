@@ -1,6 +1,6 @@
 const PLANS = {
   starter: 29,
-  pro: 120,
+  pro: 100,
   scale: 250
 };
 
