@@ -39,6 +39,14 @@ function commandFailure(label, result) {
   return new Error(`${label} failed: ${detail}`);
 }
 
+function withoutGitHubCredentials(env = process.env) {
+  const next = { ...env };
+  delete next.GITHUB_OWNER;
+  delete next.GITHUB_REPO;
+  delete next.GITHUB_TOKEN;
+  return next;
+}
+
 async function markFailed({ deps, issue, config, env, error }) {
   const local = config.localPr;
   await deps.commentOnIssue(
@@ -92,6 +100,7 @@ export async function runLocalWorkerOnce({
 
     const codexResult = await deps.runCommand(local.codexCommand, local.codexArgs, {
       cwd: worktreePath,
+      env: withoutGitHubCredentials(),
       input: buildLocalCodexPrompt()
     });
     if (codexResult.code !== 0) {
@@ -100,6 +109,7 @@ export async function runLocalWorkerOnce({
 
     const testResult = await deps.runCommand(local.testCommand, [], {
       cwd: worktreePath,
+      env: withoutGitHubCredentials(),
       shell: true
     });
     if (testResult.code !== 0) {

@@ -11,6 +11,7 @@ export function buildLocalCodexPrompt() {
     '- Do not print or expose secrets.',
     '- Keep changes minimal.',
     '- Add or update tests when practical.',
+    '- Do not stop after only adding or updating tests; implement the requested behavior too.',
     '- Run the relevant tests before finishing.'
   ].join('\n');
 }

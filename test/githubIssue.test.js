@@ -62,6 +62,7 @@ test('createGitHubIssue uses caller-provided labels when supplied', async () => 
     const result = await createGitHubIssue({
       type: 'bug',
       title: 'SAVE10 coupon does not work',
+      issueBody: 'Labels: bug, local:candidate',
       classification: {
         labels: ['bug', 'autofix:candidate']
       }
@@ -75,6 +76,7 @@ test('createGitHubIssue uses caller-provided labels when supplied', async () => 
 
     assert.equal(result.created, true);
     assert.deepEqual(requestBody.labels, ['bug', 'local:candidate']);
+    assert.equal(requestBody.body, 'Labels: bug, local:candidate');
   } finally {
     globalThis.fetch = originalFetch;
   }

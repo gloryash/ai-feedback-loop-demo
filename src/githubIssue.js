@@ -96,7 +96,7 @@ export async function createGitHubIssue(report, env = process.env, options = {})
     },
     body: JSON.stringify({
       title: `[${report.type}] ${report.title}`,
-      body: buildIssueBody(report),
+      body: report.issueBody || buildIssueBody(report),
       labels: options.labels || report.classification.labels
     })
   });

@@ -157,6 +157,7 @@ test('POST /api/report passes cloud autofix labels to GitHub issue creation', as
 test('POST /api/report passes local candidate labels in local-pr mode', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueLabels;
+  let issueBody;
   const app = createApp({
     storageDir,
     automationConfig: {
@@ -166,6 +167,7 @@ test('POST /api/report passes local candidate labels in local-pr mode', async ()
     },
     createGitHubIssue: async (report, env, options) => {
       issueLabels = options.labels;
+      issueBody = report.issueBody;
       return { created: true, number: 23, url: 'https://github.com/acme/demo/issues/23' };
     }
   });
@@ -189,6 +191,8 @@ test('POST /api/report passes local candidate labels in local-pr mode', async ()
     assert.equal(response.status, 201);
     assert.deepEqual(issueLabels, ['bug', 'local:candidate']);
     assert.equal(issueLabels.includes('autofix:candidate'), false);
+    assert.match(issueBody, /Labels: bug, local:candidate/);
+    assert.doesNotMatch(issueBody, /Labels: bug, autofix:candidate/);
     assert.equal(payload.automation.mode, 'local-pr');
     assert.equal(payload.automation.requiresApproval, true);
   } finally {

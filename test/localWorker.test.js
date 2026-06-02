@@ -71,7 +71,15 @@ function makeDeps({ issues = [issue()], hasChanges = true, commands = [] } = {})
       calls.push(['pushBranch', branchName]);
     },
     runCommand: async (command, args, options = {}) => {
-      calls.push(['runCommand', command, args, options.cwd, options.input || '', options.shell || false]);
+      calls.push([
+        'runCommand',
+        command,
+        args,
+        options.cwd,
+        options.input || '',
+        options.shell || false,
+        options.env
+      ]);
       return commandQueue.shift() || { code: 0, stdout: '', stderr: '' };
     },
     writeFile: async (path, content) => {
@@ -122,6 +130,56 @@ test('runLocalWorkerOnce processes one approved issue and creates a PR', async (
   assert.equal(calls.some((call) => call[0] === 'commentOnIssue' && call[2].includes('pull/34')), true);
   assert.deepEqual(calls.at(-2), ['removeIssueLabel', 12, 'local:running']);
   assert.deepEqual(calls.at(-1), ['addIssueLabels', 12, ['local:pr-created']]);
+});
+
+test('runLocalWorkerOnce does not expose GitHub credentials to Codex or tests', async () => {
+  const originalToken = process.env.GITHUB_TOKEN;
+  const originalOwner = process.env.GITHUB_OWNER;
+  const originalRepo = process.env.GITHUB_REPO;
+  process.env.GITHUB_TOKEN = 'process-token';
+  process.env.GITHUB_OWNER = 'process-owner';
+  process.env.GITHUB_REPO = 'process-repo';
+
+  try {
+    const { calls, deps } = makeDeps({
+      commands: [
+        { code: 0, stdout: 'codex done', stderr: '' },
+        { code: 0, stdout: 'tests passed', stderr: '' },
+        { code: 0, stdout: 'https://github.com/acme/demo/pull/34\n', stderr: '' }
+      ]
+    });
+
+    await runLocalWorkerOnce({
+      config: baseConfig(),
+      env: { GITHUB_OWNER: 'acme', GITHUB_REPO: 'demo', GITHUB_TOKEN: 'api-token' },
+      deps
+    });
+
+    const codexCall = calls.find((call) => call[0] === 'runCommand' && call[1] === 'codex');
+    const testCall = calls.find((call) => call[0] === 'runCommand' && call[1] === 'npm test');
+    assert.equal(codexCall[6].GITHUB_TOKEN, undefined);
+    assert.equal(codexCall[6].GITHUB_OWNER, undefined);
+    assert.equal(codexCall[6].GITHUB_REPO, undefined);
+    assert.equal(testCall[6].GITHUB_TOKEN, undefined);
+    assert.equal(testCall[6].GITHUB_OWNER, undefined);
+    assert.equal(testCall[6].GITHUB_REPO, undefined);
+  } finally {
+    if (originalToken === undefined) {
+      delete process.env.GITHUB_TOKEN;
+    } else {
+      process.env.GITHUB_TOKEN = originalToken;
+    }
+    if (originalOwner === undefined) {
+      delete process.env.GITHUB_OWNER;
+    } else {
+      process.env.GITHUB_OWNER = originalOwner;
+    }
+    if (originalRepo === undefined) {
+      delete process.env.GITHUB_REPO;
+    } else {
+      process.env.GITHUB_REPO = originalRepo;
+    }
+  }
 });
 
 test('runLocalWorkerOnce marks issue failed when Codex exits non-zero', async () => {

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test test/*.test.js",
+    "test": "node --test --test-concurrency=1 test/*.test.js",
     "demo:reset": "node scripts/reset-demo.js",
     "worker:local": "node scripts/local-worker.js",
     "worker:local:once": "node scripts/local-worker.js --once"
