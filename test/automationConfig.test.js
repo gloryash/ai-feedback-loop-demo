@@ -15,6 +15,15 @@ test('loadAutomationConfig defaults to cloud mode', async () => {
   assert.equal(config.localPr.approvalLabel, 'local:approved');
 });
 
+test('loadAutomationConfig defaults localPr Codex run mode to internal', async () => {
+  const config = await loadAutomationConfig({ env: {}, cwd: '/tmp/no-config' });
+
+  assert.equal(config.localPr.codexRunMode, 'internal');
+  assert.equal(config.localPr.terminalApp, 'iterm2');
+  assert.equal(config.localPr.terminalCloseOnExit, false);
+  assert.equal(config.localPr.terminalRunRoot, '.aipr/runs');
+});
+
 test('loadAutomationConfig loads local-pr config from AUTOMATION_CONFIG', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'automation-config-'));
   const path = join(dir, 'automation.config.json');
@@ -65,5 +74,36 @@ test('loadAutomationConfig rejects unsupported modes', async () => {
   await assert.rejects(
     () => loadAutomationConfig({ env: { AUTOMATION_MODE: 'bad' }, cwd: '/tmp' }),
     /Unsupported automation mode/
+  );
+});
+
+test('loadAutomationConfig rejects unsupported localPr codexRunMode', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'automation-config-'));
+  const path = join(dir, 'automation.config.json');
+  await writeFile(path, JSON.stringify({
+    localPr: {
+      codexRunMode: 'browser'
+    }
+  }));
+
+  await assert.rejects(
+    () => loadAutomationConfig({ env: { AUTOMATION_CONFIG: path }, cwd: dir }),
+    /Unsupported localPr codexRunMode: browser/
+  );
+});
+
+test('loadAutomationConfig rejects unsupported localPr terminalApp', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'automation-config-'));
+  const path = join(dir, 'automation.config.json');
+  await writeFile(path, JSON.stringify({
+    localPr: {
+      codexRunMode: 'terminal',
+      terminalApp: 'warp'
+    }
+  }));
+
+  await assert.rejects(
+    () => loadAutomationConfig({ env: { AUTOMATION_CONFIG: path }, cwd: dir }),
+    /Unsupported localPr terminalApp: warp/
   );
 });

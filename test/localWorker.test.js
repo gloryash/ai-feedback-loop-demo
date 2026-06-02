@@ -182,6 +182,48 @@ test('runLocalWorkerOnce does not expose GitHub credentials to Codex or tests', 
   }
 });
 
+test('runLocalWorkerOnce uses terminal runner only for Codex in terminal mode', async () => {
+  const { calls, deps } = makeDeps({
+    commands: [
+      { code: 0, stdout: 'tests passed', stderr: '' },
+      { code: 0, stdout: 'https://github.com/acme/demo/pull/34\n', stderr: '' }
+    ]
+  });
+  deps.runCodexInTerminal = async (options) => {
+    calls.push([
+      'runCodexInTerminal',
+      options.worktreePath,
+      options.prompt,
+      options.env
+    ]);
+    return {
+      code: 0,
+      stdout: 'codex terminal done',
+      stderr: '',
+      runDir: '/repo/.aipr/runs/issue-12'
+    };
+  };
+
+  const result = await runLocalWorkerOnce({
+    config: baseConfig({ codexRunMode: 'terminal' }),
+    env: { GITHUB_OWNER: 'acme', GITHUB_REPO: 'demo', GITHUB_TOKEN: 'token' },
+    deps
+  });
+
+  const terminalCall = calls.find((call) => call[0] === 'runCodexInTerminal');
+
+  assert.equal(result.status, 'pr-created');
+  assert.equal(result.prUrl, 'https://github.com/acme/demo/pull/34');
+  assert.equal(Boolean(terminalCall), true);
+  assert.match(terminalCall[2], /Implement the GitHub issue/);
+  assert.equal(terminalCall[3].GITHUB_TOKEN, undefined);
+  assert.equal(terminalCall[3].GITHUB_OWNER, undefined);
+  assert.equal(terminalCall[3].GITHUB_REPO, undefined);
+  assert.equal(calls.some((call) => call[0] === 'runCommand' && call[1] === 'codex'), false);
+  assert.equal(calls.some((call) => call[0] === 'commitChanges'), true);
+  assert.equal(calls.some((call) => call[0] === 'pushBranch'), true);
+});
+
 test('runLocalWorkerOnce marks issue failed when Codex exits non-zero', async () => {
   const { calls, deps } = makeDeps({
     commands: [

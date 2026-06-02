@@ -15,6 +15,7 @@ import {
 } from './localGit.js';
 import { buildLocalCodexPrompt, buildLocalIssueContext } from './localPrompt.js';
 import { runCommand } from './processRunner.js';
+import { runCodexInTerminal } from './terminalCodexRunner.js';
 
 const DEFAULT_DEPS = {
   addIssueLabels,
@@ -27,6 +28,7 @@ const DEFAULT_DEPS = {
   pushBranch,
   verifyGitRepo,
   runCommand,
+  runCodexInTerminal,
   writeFile
 };
 
@@ -98,11 +100,21 @@ export async function runLocalWorkerOnce({
       `${JSON.stringify(buildLocalIssueContext(issue), null, 2)}\n`
     );
 
-    const codexResult = await deps.runCommand(local.codexCommand, local.codexArgs, {
-      cwd: worktreePath,
-      env: withoutGitHubCredentials(),
-      input: buildLocalCodexPrompt()
-    });
+    const codexEnv = withoutGitHubCredentials();
+    const codexPrompt = buildLocalCodexPrompt();
+    const codexResult = local.codexRunMode === 'terminal'
+      ? await deps.runCodexInTerminal({
+          local,
+          worktreePath,
+          issueNumber: issue.number,
+          prompt: codexPrompt,
+          env: codexEnv
+        })
+      : await deps.runCommand(local.codexCommand, local.codexArgs, {
+          cwd: worktreePath,
+          env: codexEnv,
+          input: codexPrompt
+        });
     if (codexResult.code !== 0) {
       throw commandFailure('Codex', codexResult);
     }

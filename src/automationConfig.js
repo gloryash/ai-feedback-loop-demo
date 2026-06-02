@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const SUPPORTED_MODES = new Set(['cloud', 'local-pr']);
+const SUPPORTED_CODEX_RUN_MODES = new Set(['internal', 'terminal']);
+const SUPPORTED_TERMINAL_APPS = new Set(['iterm2', 'terminal']);
 
 const DEFAULT_CONFIG = {
   mode: 'cloud',
@@ -20,6 +22,10 @@ const DEFAULT_CONFIG = {
     maxConcurrency: 1,
     codexCommand: 'codex',
     codexArgs: ['exec', '--sandbox', 'workspace-write', '--ephemeral', '-'],
+    codexRunMode: 'internal',
+    terminalApp: 'iterm2',
+    terminalCloseOnExit: false,
+    terminalRunRoot: '.aipr/runs',
     testCommand: 'npm test',
     approvalLabel: 'local:approved',
     candidateLabel: 'local:candidate',
@@ -83,6 +89,14 @@ function applyEnv(config, env) {
 function validateConfig(config) {
   if (!SUPPORTED_MODES.has(config.mode)) {
     throw new Error(`Unsupported automation mode: ${config.mode}`);
+  }
+
+  if (!SUPPORTED_CODEX_RUN_MODES.has(config.localPr.codexRunMode)) {
+    throw new Error(`Unsupported localPr codexRunMode: ${config.localPr.codexRunMode}`);
+  }
+
+  if (!SUPPORTED_TERMINAL_APPS.has(config.localPr.terminalApp)) {
+    throw new Error(`Unsupported localPr terminalApp: ${config.localPr.terminalApp}`);
   }
 }
 
