@@ -64,6 +64,11 @@ test('runCodexInTerminal writes run artifacts and returns status output', async 
   assert.equal(prompt, 'local prompt');
   assert.match(script, /codex/);
   assert.match(script, /CODEX_HOME/);
+  assert.match(script, /AIPR local Codex run/);
+  assert.match(script, /mkfifo/);
+  assert.match(script, /tee "\$STDOUT_PATH"/);
+  assert.match(script, /tee "\$STDERR_PATH"/);
+  assert.doesNotMatch(script, /> "\$STDOUT_PATH" 2> "\$STDERR_PATH"/);
   assert.doesNotMatch(script, /must-not-be-exported/);
   assert.equal(calls[0].command, 'osascript');
   assert.equal(calls[0].args[0], '-e');
