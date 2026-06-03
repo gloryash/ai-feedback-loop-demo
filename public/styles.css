@@ -121,6 +121,10 @@ button.primary {
   color: var(--ink);
 }
 
+.tui-title-word {
+  color: #16a34a;
+}
+
 .hero h1,
 .report-title h1 {
   margin: 0;
