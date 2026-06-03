@@ -5,6 +5,26 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../src/server.js';
 
+const CLOUD_TEST_CONFIG = {
+  mode: 'cloud',
+  cloud: {
+    enabled: true,
+    autofixLabel: 'autofix:candidate'
+  },
+  localPr: {
+    enabled: false,
+    candidateLabel: 'local:candidate',
+    approvalLabel: 'local:approved'
+  }
+};
+
+function createTestApp(options = {}) {
+  return createApp({
+    automationConfig: CLOUD_TEST_CONFIG,
+    ...options
+  });
+}
+
 async function closeServer(server) {
   await new Promise((resolve) => server.close(resolve));
 }
@@ -39,7 +59,7 @@ function featureForm() {
 
 test('POST /api/report stores ticket and returns classification without GitHub token', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
-  const app = createApp({ storageDir });
+  const app = createTestApp({ storageDir });
   const server = app.listen(0);
 
   try {
@@ -71,7 +91,7 @@ test('POST /api/report stores ticket and returns classification without GitHub t
 
 test('POST /api/report accepts simplified details-only bug reports', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
-  const app = createApp({ storageDir });
+  const app = createTestApp({ storageDir });
   const server = app.listen(0);
 
   try {
@@ -109,7 +129,7 @@ test('POST /api/report accepts simplified details-only bug reports', async () =>
 
 test('POST /api/report uses Render public URL for uploaded attachment links', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     env: {
       RENDER_EXTERNAL_URL: 'https://ai-feedback-loop-demo.onrender.com'
@@ -149,7 +169,7 @@ test('POST /api/report uses Render public URL for uploaded attachment links', as
 test('POST /api/report queues feature requests for review without calling GitHub', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueCalls = 0;
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     createGitHubIssue: async () => {
       issueCalls += 1;
@@ -184,7 +204,7 @@ test('POST /api/report auto-approves clear bugs and persists reviewed issue body
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueCalls = 0;
   let issueBody = '';
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     createGitHubIssue: async (report) => {
       issueCalls += 1;
@@ -221,7 +241,7 @@ test('POST /api/report auto-approves clear bugs and persists reviewed issue body
 test('admin list, detail, comment, and approve flow persists comment in issue body', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueBody = '';
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     createGitHubIssue: async (report) => {
       issueBody = report.issueBody;
@@ -277,7 +297,7 @@ test('admin list, detail, comment, and approve flow persists comment in issue bo
 test('admin reject flow sets rejected review state without calling GitHub', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueCalls = 0;
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     createGitHubIssue: async () => {
       issueCalls += 1;
@@ -315,7 +335,7 @@ test('admin reject flow sets rejected review state without calling GitHub', asyn
 test('admin approve and reject return 409 for tickets already sent to AI', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueCalls = 0;
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     createGitHubIssue: async () => {
       issueCalls += 1;
@@ -361,7 +381,7 @@ test('admin concurrent approve only sends a ticket to AI once', async () => {
   const releaseFirstCreatePromise = new Promise((resolve) => {
     releaseFirstCreate = resolve;
   });
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     createGitHubIssue: async () => {
       issueCalls += 1;
@@ -413,7 +433,7 @@ test('admin reject returns 409 while approve is in progress', async () => {
   const releaseFirstCreatePromise = new Promise((resolve) => {
     releaseFirstCreate = resolve;
   });
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     createGitHubIssue: async () => {
       issueCalls += 1;
@@ -462,7 +482,7 @@ test('admin reject returns 409 while approve is in progress', async () => {
 test('POST /api/report passes cloud autofix labels to GitHub issue creation', async () => {
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueLabels;
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     automationConfig: {
       mode: 'cloud',
@@ -505,7 +525,7 @@ test('POST /api/report passes local candidate labels in local-pr mode', async ()
   const storageDir = await mkdtemp(join(tmpdir(), 'feedback-loop-'));
   let issueLabels;
   let issueBody;
-  const app = createApp({
+  const app = createTestApp({
     storageDir,
     automationConfig: {
       mode: 'local-pr',
