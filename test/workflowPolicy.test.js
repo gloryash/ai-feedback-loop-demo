@@ -31,3 +31,25 @@ test('auto-merge uses automation token so merged AI PRs can trigger deployment',
   assert.match(workflow, /REPO_AUTOMATION_TOKEN/);
   assert.doesNotMatch(workflow, /GH_TOKEN: \\$\\{\\{ secrets\\.GITHUB_TOKEN \\}\\}/);
 });
+
+test('auto-merge also covers local worker pull requests', async () => {
+  const workflow = await readFile(new URL('../.github/workflows/auto-merge-bugfix.yml', import.meta.url), 'utf8');
+
+  assert.match(workflow, /startsWith\(github\.event\.pull_request\.head\.ref, 'ai\/local\/'\)/);
+  assert.match(workflow, /ai:autofix/);
+  assert.match(workflow, /gh pr merge "\$PR_NUMBER" --squash --auto/);
+});
+
+test('Render deploy workflow writes deployment status back to the source issue', async () => {
+  const workflow = await readFile(new URL('../.github/workflows/deploy-render.yml', import.meta.url), 'utf8');
+
+  assert.match(workflow, /issueNumber/);
+  assert.match(workflow, /HEAD_COMMIT_MESSAGE/);
+  assert.match(workflow, /api\.render\.com\/v1\/services\/\$\{RENDER_SERVICE_ID\}\/deploys\/\$\{DEPLOY_ID\}/);
+  assert.match(workflow, /local:deploying/);
+  assert.match(workflow, /local:deployed/);
+  assert.match(workflow, /local:deploy-failed/);
+  assert.match(workflow, /GH_REPO: \$\{\{ github\.repository \}\}/);
+  assert.match(workflow, /gh issue comment "\$ISSUE_NUMBER"/);
+  assert.match(workflow, /gh issue edit "\$ISSUE_NUMBER"/);
+});

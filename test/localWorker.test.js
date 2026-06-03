@@ -127,7 +127,15 @@ test('runLocalWorkerOnce processes one approved issue and creates a PR', async (
   assert.equal(calls.some((call) => call[0] === 'writeFile' && call[1].endsWith('/.codex-issue-context.json')), true);
   assert.equal(calls.some((call) => call[0] === 'commitChanges'), true);
   assert.equal(calls.some((call) => call[0] === 'pushBranch'), true);
-  assert.equal(calls.some((call) => call[0] === 'commentOnIssue' && call[2].includes('pull/34')), true);
+  const prCreateCall = calls.find((call) => call[0] === 'runCommand' && call[1] === 'gh' && call[2].includes('create'));
+  const prBody = prCreateCall[2][prCreateCall[2].indexOf('--body') + 1];
+  assert.match(prBody, /Closes #12/);
+  assert.match(prBody, /Auto-merge/);
+  assert.match(prBody, /Render deploy/);
+  const issueComment = calls.find((call) => call[0] === 'commentOnIssue' && call[2].includes('pull/34'));
+  assert.match(issueComment[2], /Local worker created PR/);
+  assert.match(issueComment[2], /auto-merge/);
+  assert.match(issueComment[2], /Render deploy/);
   assert.deepEqual(calls.at(-2), ['removeIssueLabel', 12, 'local:running']);
   assert.deepEqual(calls.at(-1), ['addIssueLabels', 12, ['local:pr-created']]);
 });

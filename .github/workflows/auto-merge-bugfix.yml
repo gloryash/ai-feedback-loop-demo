@@ -1,4 +1,4 @@
-name: auto-merge bugfix
+name: auto-merge AI PR
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   enable-auto-merge:
-    if: contains(join(github.event.pull_request.labels.*.name, ','), 'ai:autofix')
+    if: contains(join(github.event.pull_request.labels.*.name, ','), 'ai:autofix') || startsWith(github.event.pull_request.head.ref, 'ai/local/')
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge

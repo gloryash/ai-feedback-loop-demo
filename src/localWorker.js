@@ -41,6 +41,28 @@ function commandFailure(label, result) {
   return new Error(`${label} failed: ${detail}`);
 }
 
+function prBodyForIssue(issueNumber) {
+  return [
+    `Closes #${issueNumber}`,
+    '',
+    '## AIPR automation',
+    '- Auto-merge will be enabled for this local worker PR after GitHub checks pass.',
+    '- Render deploy starts automatically after this PR is merged into main.',
+    '- Deployment status is written back to the source issue as GitHub comments and labels.'
+  ].join('\n');
+}
+
+function prCreatedComment(prUrl) {
+  return [
+    `Local worker created PR: ${prUrl}`,
+    '',
+    'Next steps:',
+    '- GitHub Actions will enable auto-merge after checks pass.',
+    '- Merging into main triggers Render deploy.',
+    '- Render deploy status will be posted back to this issue.'
+  ].join('\n');
+}
+
 function withoutGitHubCredentials(env = process.env) {
   const next = { ...env };
   delete next.GITHUB_OWNER;
@@ -149,7 +171,7 @@ export async function runLocalWorkerOnce({
       '--title',
       `fix: resolve local issue #${issue.number}`,
       '--body',
-      `Closes #${issue.number}`
+      prBodyForIssue(issue.number)
     ], {
       cwd: worktreePath
     });
@@ -158,7 +180,7 @@ export async function runLocalWorkerOnce({
     }
 
     const prUrl = prResult.stdout.trim();
-    await deps.commentOnIssue(issue.number, `Local worker created PR: ${prUrl}`, env);
+    await deps.commentOnIssue(issue.number, prCreatedComment(prUrl), env);
     await deps.removeIssueLabel(issue.number, local.runningLabel, env);
     await deps.addIssueLabels(issue.number, [local.doneLabel], env);
 

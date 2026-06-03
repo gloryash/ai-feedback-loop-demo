@@ -61,6 +61,19 @@ function statusText(status) {
   return statusLabels[status] || status || '未知';
 }
 
+function automationStatusNote(safeGithubUrl) {
+  if (!safeGithubUrl) {
+    return '';
+  }
+
+  return `
+    <div class="detail-block automation-status-note">
+      <h3>AI 后续状态</h3>
+      <p>本地 AI 创建 PR 后会等待 GitHub checks，通过后自动合并；合并到 main 后会触发 Render 部署。PR、自动合并和 Render 部署状态会持续写回 GitHub Issue。</p>
+    </div>
+  `;
+}
+
 function setResult(text, kind = 'pending') {
   adminResult.textContent = text;
   adminResult.classList.remove('result-error', 'result-pending');
@@ -164,6 +177,7 @@ function renderDetail() {
       <div><dt>标签</dt><dd>${escapeHtml(labels)}</dd></div>
       <div><dt>GitHub</dt><dd>${githubUrl}</dd></div>
     </dl>
+    ${automationStatusNote(safeGithubUrl)}
     <div class="detail-block">
       <h3>用户需求</h3>
       <pre>${escapeHtml(ticket.details || '-')}</pre>

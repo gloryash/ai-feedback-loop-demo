@@ -45,6 +45,15 @@ test('admin script sanitizes external GitHub issue links', async () => {
   assert.match(js, /safeExternalUrl\(ticket\.github\?\.url\)/);
 });
 
+test('admin script explains where PR merge and deploy status are tracked', async () => {
+  const js = await readFile(new URL('../public/admin.js', import.meta.url), 'utf8');
+
+  assert.match(js, /automationStatusNote/);
+  assert.match(js, /自动合并/);
+  assert.match(js, /Render 部署/);
+  assert.match(js, /GitHub Issue/);
+});
+
 test('public navigation links to the admin page', async () => {
   const indexHtml = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   const reportHtml = await readFile(new URL('../public/report.html', import.meta.url), 'utf8');
