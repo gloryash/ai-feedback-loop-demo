@@ -75,6 +75,67 @@ test('runCodexInTerminal writes run artifacts and returns status output', async 
   assert.match(calls[0].args[1], /iTerm2/);
 });
 
+test('runCodexInTerminal launches interactive Codex TUI with a completion protocol in tui mode', async () => {
+  const { worktreePath, runRoot } = await makeDirs();
+  const calls = [];
+
+  const result = await runCodexInTerminal({
+    local: {
+      codexRunMode: 'tui',
+      codexCommand: 'codex',
+      codexArgs: ['exec', '--sandbox', 'workspace-write', '-'],
+      tuiCodexArgs: ['--sandbox', 'workspace-write', '--search'],
+      terminalApp: 'iterm2',
+      terminalRunRoot: runRoot,
+      terminalCloseOnExit: false,
+      terminalStatusTimeoutMs: 1000,
+      terminalStatusPollMs: 10
+    },
+    worktreePath,
+    issueNumber: 77,
+    prompt: 'make the page green',
+    env: { CODEX_HOME: '/tmp/codex-home', GITHUB_TOKEN: 'must-not-be-exported' },
+    deps: {
+      mkdir,
+      writeFile,
+      readFile,
+      chmod,
+      runCommand: async (command, args, options) => {
+        calls.push({ command, args, options });
+        const issueRunDir = join(runRoot, 'issue-77');
+        await writeFile(join(issueRunDir, 'status.json'), JSON.stringify({
+          code: 0,
+          stdoutPath: join(issueRunDir, 'stdout.log'),
+          stderrPath: join(issueRunDir, 'stderr.log')
+        }));
+        await writeFile(join(issueRunDir, 'stdout.log'), 'tui marked done');
+        await writeFile(join(issueRunDir, 'stderr.log'), '');
+        return { code: 0, stdout: '', stderr: '' };
+      },
+      sleep: async () => {},
+      now: () => Date.now()
+    }
+  });
+
+  const issueRunDir = join(runRoot, 'issue-77');
+  const prompt = await readFile(join(issueRunDir, 'prompt.txt'), 'utf8');
+  const script = await readFile(join(issueRunDir, 'run.sh'), 'utf8');
+
+  assert.equal(result.code, 0);
+  assert.equal(result.stdout, 'tui marked done');
+  assert.match(prompt, /make the page green/);
+  assert.match(prompt, /AIPR TUI completion protocol/);
+  assert.match(prompt, /status\.json/);
+  assert.match(prompt, /Do not write the status file until/);
+  assert.match(script, /TUI_PROMPT="\$\(cat "\$PROMPT_PATH"\)"/);
+  assert.match(script, /'codex' '--sandbox' 'workspace-write' '--search' "\$TUI_PROMPT"/);
+  assert.doesNotMatch(script, /'codex' 'exec'/);
+  assert.doesNotMatch(script, /mkfifo/);
+  assert.doesNotMatch(script, /tee "\$STDOUT_PATH"/);
+  assert.doesNotMatch(script, /must-not-be-exported/);
+  assert.equal(calls[0].command, 'osascript');
+});
+
 test('runCodexInTerminal returns launch failure without waiting for status', async () => {
   const { worktreePath, runRoot } = await makeDirs();
 

@@ -124,7 +124,7 @@ export async function runLocalWorkerOnce({
 
     const codexEnv = withoutGitHubCredentials();
     const codexPrompt = buildLocalCodexPrompt();
-    const codexResult = local.codexRunMode === 'terminal'
+    const codexResult = ['terminal', 'tui'].includes(local.codexRunMode)
       ? await deps.runCodexInTerminal({
           local,
           worktreePath,

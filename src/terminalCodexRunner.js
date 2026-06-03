@@ -51,6 +51,71 @@ function terminalEnvExportLines(env = {}) {
     .map(([key, value]) => `export ${key}=${shellQuote(value)}`);
 }
 
+function statusWriteCommand({ statusPath, code, stdoutPath, stderrPath }) {
+  const writer = [
+    'const fs=require("fs");',
+    'const [statusPath, code, stdoutPath, stderrPath]=process.argv.slice(1);',
+    'fs.writeFileSync(statusPath, JSON.stringify({',
+    'code:Number(code),',
+    'stdoutPath,',
+    'stderrPath',
+    '}));'
+  ].join('');
+
+  return [
+    'node',
+    '-e',
+    shellQuote(writer),
+    shellQuote(statusPath),
+    String(code),
+    shellQuote(stdoutPath),
+    shellQuote(stderrPath)
+  ].join(' ');
+}
+
+function buildTuiPrompt({ prompt, statusPath, stdoutPath, stderrPath }) {
+  const successCommand = statusWriteCommand({
+    statusPath,
+    code: 0,
+    stdoutPath,
+    stderrPath
+  });
+  const failureCommand = statusWriteCommand({
+    statusPath,
+    code: 1,
+    stdoutPath,
+    stderrPath
+  });
+
+  return [
+    prompt,
+    '',
+    '## AIPR TUI completion protocol',
+    '',
+    'You are running inside an interactive Codex TUI window launched by the local AIPR worker.',
+    'Do the requested code changes normally. The worker will run tests, commit, push, and open the PR after you mark this TUI step complete.',
+    '',
+    'Do not write the status file until after implementation is complete and you have done the checks you can reasonably perform inside this TUI session.',
+    '',
+    'When you are done, run this exact command:',
+    '',
+    '```bash',
+    successCommand,
+    '```',
+    '',
+    'If you are blocked and cannot complete the implementation, append a short reason to the stderr log and then run this exact command:',
+    '',
+    '```bash',
+    `printf '%s\\n' 'Blocked: <reason>' >> ${shellQuote(stderrPath)}`,
+    failureCommand,
+    '```',
+    '',
+    `Status file: ${statusPath}`,
+    `Stdout log: ${stdoutPath}`,
+    `Stderr log: ${stderrPath}`
+  ].join('\n');
+}
+
 function buildRunScript({
   local,
   worktreePath,
@@ -62,7 +127,11 @@ function buildRunScript({
   issueRunDir,
   env
 }) {
-  const command = [local.codexCommand, ...(local.codexArgs || [])]
+  const isTui = local.codexRunMode === 'tui';
+  const codexArgs = isTui
+    ? (local.tuiCodexArgs || ['--sandbox', 'workspace-write'])
+    : (local.codexArgs || []);
+  const command = [local.codexCommand, ...codexArgs]
     .map(shellQuote)
     .join(' ');
   const envLines = terminalEnvExportLines(env).join('\n');
@@ -73,6 +142,47 @@ function buildRunScript({
         `printf "Run artifacts: %s\\n" ${shellQuote(issueRunDir)}`,
         'exec "${SHELL:-/bin/zsh}" -l'
       ].join('\n');
+
+  if (isTui) {
+    return [
+      '#!/bin/sh',
+      'set -u',
+      envLines,
+      `WORKTREE_PATH=${shellQuote(worktreePath)}`,
+      `PROMPT_PATH=${shellQuote(promptPath)}`,
+      `STDOUT_PATH=${shellQuote(stdoutPath)}`,
+      `STDERR_PATH=${shellQuote(stderrPath)}`,
+      `STATUS_PATH=${shellQuote(statusPath)}`,
+      `ISSUE_RUN_DIR=${shellQuote(issueRunDir)}`,
+      `ISSUE_NUMBER=${shellQuote(issueNumber)}`,
+      '',
+      'cd "$WORKTREE_PATH"',
+      'set +e',
+      'printf "\\n=== AIPR local Codex TUI run: issue #%s ===\\n" "$ISSUE_NUMBER"',
+      'printf "Worktree: %s\\n" "$WORKTREE_PATH"',
+      'printf "Prompt: %s\\n" "$PROMPT_PATH"',
+      'printf "Status: %s\\n" "$STATUS_PATH"',
+      'printf "Stdout log: %s\\n" "$STDOUT_PATH"',
+      'printf "Stderr log: %s\\n\\n" "$STDERR_PATH"',
+      'TUI_PROMPT="$(cat "$PROMPT_PATH")"',
+      `${command} "$TUI_PROMPT"`,
+      'code=$?',
+      'if [ ! -f "$STATUS_PATH" ]; then',
+      '  printf "Codex TUI exited before writing status; exit code %s\\n" "$code" > "$STDERR_PATH"',
+      '  node - "$STATUS_PATH" "$code" "$STDOUT_PATH" "$STDERR_PATH" <<\'NODE_STATUS\'',
+      'const fs = require("fs");',
+      'const [statusPath, code, stdoutPath, stderrPath] = process.argv.slice(2);',
+      'fs.writeFileSync(statusPath, JSON.stringify({',
+      '  code: Number(code),',
+      '  stdoutPath,',
+      '  stderrPath',
+      '}));',
+      'NODE_STATUS',
+      'fi',
+      closeBehavior,
+      ''
+    ].filter((line) => line !== '').join('\n');
+  }
 
   return [
     '#!/bin/sh',
@@ -180,9 +290,12 @@ export async function runCodexInTerminal({
   const stdoutPath = join(issueRunDir, 'stdout.log');
   const stderrPath = join(issueRunDir, 'stderr.log');
   const statusPath = join(issueRunDir, 'status.json');
+  const promptForRun = local.codexRunMode === 'tui'
+    ? buildTuiPrompt({ prompt, statusPath, stdoutPath, stderrPath })
+    : prompt;
 
   await deps.mkdir(issueRunDir, { recursive: true });
-  await deps.writeFile(promptPath, prompt);
+  await deps.writeFile(promptPath, promptForRun);
   await deps.writeFile(stdoutPath, '');
   await deps.writeFile(stderrPath, '');
   await deps.writeFile(scriptPath, buildRunScript({

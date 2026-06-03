@@ -22,6 +22,7 @@ test('loadAutomationConfig defaults localPr Codex run mode to internal', async (
   assert.equal(config.localPr.terminalApp, 'iterm2');
   assert.equal(config.localPr.terminalCloseOnExit, false);
   assert.equal(config.localPr.terminalRunRoot, '.aipr/runs');
+  assert.deepEqual(config.localPr.tuiCodexArgs, ['--sandbox', 'workspace-write']);
 });
 
 test('loadAutomationConfig loads local-pr config from AUTOMATION_CONFIG', async () => {
@@ -45,6 +46,27 @@ test('loadAutomationConfig loads local-pr config from AUTOMATION_CONFIG', async 
   assert.equal(config.localPr.repoPath, '/repo');
   assert.equal(config.localPr.approvalLabel, 'local:approved');
   assert.deepEqual(config.localPr.codexArgs, ['exec', '--sandbox', 'workspace-write', '--ephemeral', '-']);
+});
+
+test('loadAutomationConfig accepts localPr TUI Codex mode', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'automation-config-'));
+  const path = join(dir, 'automation.config.json');
+  await writeFile(path, JSON.stringify({
+    mode: 'local-pr',
+    localPr: {
+      enabled: true,
+      codexRunMode: 'tui',
+      tuiCodexArgs: ['--sandbox', 'workspace-write', '--search']
+    }
+  }));
+
+  const config = await loadAutomationConfig({
+    env: { AUTOMATION_CONFIG: path },
+    cwd: dir
+  });
+
+  assert.equal(config.localPr.codexRunMode, 'tui');
+  assert.deepEqual(config.localPr.tuiCodexArgs, ['--sandbox', 'workspace-write', '--search']);
 });
 
 test('loadAutomationConfig lets AUTOMATION_MODE override file mode', async () => {

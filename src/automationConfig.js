@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const SUPPORTED_MODES = new Set(['cloud', 'local-pr']);
-const SUPPORTED_CODEX_RUN_MODES = new Set(['internal', 'terminal']);
+const SUPPORTED_CODEX_RUN_MODES = new Set(['internal', 'terminal', 'tui']);
 const SUPPORTED_TERMINAL_APPS = new Set(['iterm2', 'terminal']);
 
 const DEFAULT_CONFIG = {
@@ -22,6 +22,7 @@ const DEFAULT_CONFIG = {
     maxConcurrency: 1,
     codexCommand: 'codex',
     codexArgs: ['exec', '--sandbox', 'workspace-write', '--ephemeral', '-'],
+    tuiCodexArgs: ['--sandbox', 'workspace-write'],
     codexRunMode: 'internal',
     terminalApp: 'iterm2',
     terminalCloseOnExit: false,
