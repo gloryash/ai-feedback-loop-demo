@@ -1,15 +1,15 @@
 :root {
   color-scheme: light;
-  --paper: #b91c1c;
+  --paper: #d1d5db;
   --ink: #1f2937;
-  --muted: #450a0a;
-  --line: #7f1d1d;
-  --panel: #fee2e2;
-  --accent: #dc2626;
-  --accent-strong: #991b1b;
-  --signal: #fca5a5;
-  --danger: #b42318;
-  --shadow: 0 18px 40px rgba(127, 29, 29, 0.24);
+  --muted: #4b5563;
+  --line: #6b7280;
+  --panel: #f3f4f6;
+  --accent: #6b7280;
+  --accent-strong: #374151;
+  --signal: #9ca3af;
+  --danger: #4b5563;
+  --shadow: 0 18px 40px rgba(31, 41, 55, 0.18);
 }
 
 * {
@@ -19,8 +19,8 @@
 body {
   margin: 0;
   background:
-    linear-gradient(90deg, rgba(254, 202, 202, 0.38) 1px, transparent 1px),
-    linear-gradient(rgba(254, 202, 202, 0.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(243, 244, 246, 0.42) 1px, transparent 1px),
+    linear-gradient(rgba(229, 231, 235, 0.36) 1px, transparent 1px),
     var(--paper);
   background-size: 36px 36px;
   color: var(--ink);
@@ -172,7 +172,7 @@ select,
 textarea {
   width: 100%;
   border: 1px solid var(--ink);
-  background: #fff7f7;
+  background: #f9fafb;
   color: var(--ink);
   padding: 12px;
   font: 16px/1.4 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
@@ -193,7 +193,7 @@ textarea {
   min-height: 92px;
   padding: 14px;
   border-right: 1px solid var(--ink);
-  background: #fecaca;
+  background: #e5e7eb;
 }
 
 .quote div:last-child {
@@ -208,7 +208,7 @@ textarea {
 
 .bug-strip {
   border-left: 5px solid var(--accent);
-  background: #fecaca;
+  background: #e5e7eb;
   padding: 14px 16px;
   color: #1f2937;
   font: 700 14px/1.45 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
@@ -261,7 +261,7 @@ textarea {
 .result {
   margin-top: 18px;
   border: 1px solid var(--line);
-  background: #fecaca;
+  background: #e5e7eb;
   color: var(--ink);
   padding: 14px;
   font: 15px/1.55 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
@@ -292,12 +292,12 @@ textarea {
 }
 
 .result-pending {
-  background: #fecaca;
+  background: #e5e7eb;
 }
 
 .result-error {
-  background: #fff1f0;
-  border-color: #f0b8b2;
+  background: #f3f4f6;
+  border-color: #9ca3af;
 }
 
 .note {
@@ -329,8 +329,8 @@ textarea {
   margin: 0;
   border: 1px solid var(--danger);
   border-left-width: 5px;
-  background: #fff1f0;
-  color: #7a271a;
+  background: #e5e7eb;
+  color: var(--ink);
   padding: 14px 16px;
   font: 800 14px/1.55 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
 }
@@ -387,7 +387,7 @@ textarea {
 .ticket-card.is-selected {
   transform: none;
   box-shadow: inset 5px 0 0 var(--accent-strong);
-  background: #fecaca;
+  background: #e5e7eb;
 }
 
 .ticket-card-top {
@@ -421,7 +421,7 @@ textarea {
   width: fit-content;
   min-height: 24px;
   border: 1px solid var(--ink);
-  background: #fecaca;
+  background: #e5e7eb;
   color: var(--ink);
   padding: 4px 8px;
   font: 800 12px/1 ui-sans-serif, "Avenir Next", Helvetica, sans-serif;
@@ -429,13 +429,13 @@ textarea {
 }
 
 .status-sent-to-ai {
-  background: #fee2e2;
+  background: #f3f4f6;
 }
 
 .status-rejected,
 .status-failed {
-  background: #fff1f0;
-  color: #7a271a;
+  background: #f3f4f6;
+  color: var(--ink);
 }
 
 .ticket-detail {
@@ -500,7 +500,7 @@ textarea {
   max-height: 240px;
   overflow: auto;
   border: 1px solid var(--line);
-  background: #fff7f7;
+  background: #f9fafb;
   padding: 12px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
